@@ -1,0 +1,53 @@
+.bill-calculator-container {
+    width: 70%;
+    margin: auto;
+    text-align: center;
+}
+
+.bill-form {
+    margin-top: 20px;
+}
+
+.input-label {
+    display: block;
+    margin-bottom: 10px;
+}
+
+.input-field {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.calculate-button {
+    padding: 8px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.calculate-button:hover {
+    background-color: #0056b3;
+}
+
+.result-container {
+    margin-top: 20px;
+}
+
+.slab-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.slab-table th, .slab-table td {
+    padding: 8px;
+    border: 1px solid #ccc;
+}
+
+.slab-table th {
+    background-color: #f2f2f2;
+}
