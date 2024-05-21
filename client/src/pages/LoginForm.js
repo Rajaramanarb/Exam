@@ -20,13 +20,15 @@ const LoginForm = () => {
       const response = await axios.post('http://localhost:5000/login', formData);
 
       if (response.status === 200) {
+        const { name, email } = response.data;
+        // Store user info in local storage
+        localStorage.setItem('user', JSON.stringify({ name, email }));
         toast.success('Login successful');
-        navigate('/HomePage');
+        navigate('/');
       }
     } catch (error) {
       console.error('Login failed:', error);
       toast.error('Login failed. Please check your credentials.');
-      // Handle login failure, e.g., show an error message to the user
     }
   };
 
@@ -35,7 +37,6 @@ const LoginForm = () => {
   };
 
   const handleForgetPassword = () => {
-    // Implement the logic for forget password, e.g., navigate to a forget password page
     navigate('/forget-password');
   };
 
@@ -45,21 +46,41 @@ const LoginForm = () => {
       <form onSubmit={handleSubmit} className="login-form">
         <div className="form-group">
           <label htmlFor="email" className="form-label">Email:</label>
-          <input type="email" name="email" value={formData.email} onChange={handleChange} className="form-control" required/>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            className="form-control"
+            required
+          />
         </div>
 
         <div className="form-group">
           <label htmlFor="password" className="form-label">Password:</label>
-          <input type="password" name="password" value={formData.password} onChange={handleChange} className="form-control" required/>
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            className="form-control"
+            required
+          />
         </div>
 
         <div className="form-group d-flex justify-content-between">
           <div>
-            <button type="button" onClick={handleCreateAccount} className="btn btn-link">Create Account</button> 
+            <button type="button" onClick={handleCreateAccount} className="btn btn-link">
+              Create Account
+            </button>
           </div>
-          <button type="submit" className="btn btn-primary">Login</button>
+          <button type="submit" className="btn btn-primary">
+            Login
+          </button>
         </div>
-        <button type="button" onClick={handleForgetPassword} className="btn btn-link">Forget Password</button>
+        <button type="button" onClick={handleForgetPassword} className="btn btn-link">
+          Forget Password
+        </button>
       </form>
     </fieldset>
   );

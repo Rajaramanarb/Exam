@@ -16,8 +16,8 @@ const App = () => {
       </center>
       <Routes>
         <Route path="/" element={<Outlet />}>
-          <Route index element ={<LoginForm />} />
-          <Route path="HomePage" element={<HomePage />} />
+          <Route path="login" element ={<LoginForm />} />
+          <Route index element={<HomePage />} />
           <Route path="Registration" element={<RegistrationForm />} />
           <Route path="forget-password" element={<PasswordReset />} />
         </Route>
