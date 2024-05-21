@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  dbName: 'AUA',
+  dbName: 'Title',
 });
 
 const UserSchema = new mongoose.Schema({

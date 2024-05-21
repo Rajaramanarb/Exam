@@ -5,7 +5,7 @@ import './index.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { BrowserRouter as Router } from 'react-router-dom';
 
-document.title = 'Youtube Comments Spam Detection with Augmented Data';
+document.title = 'Title';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

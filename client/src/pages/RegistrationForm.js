@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import 'react-toastify/dist/ReactToastify.css';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import '../css/RegistrationForm.css'; // Import custom CSS for LoginForm styling
+import { toast } from 'react-toastify';
 
 const RegistrationForm = () => {
   const [formData, setFormData] = useState({
@@ -62,6 +63,7 @@ const RegistrationForm = () => {
 
         if (response.ok) {
           console.log('User registered successfully');
+          toast.success('User registered successfully');
         } else {
           console.error('Registration failed');
         }

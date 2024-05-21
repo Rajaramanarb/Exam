@@ -12,7 +12,7 @@ const App = () => {
   return (
     <div>
       <center>
-        <h1>Youtube Comments Spam Detection with Augmented Data</h1>
+        <h1>Title</h1>
       </center>
       <Routes>
         <Route path="/" element={<Outlet />}>
