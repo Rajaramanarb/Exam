@@ -22,8 +22,6 @@ mongoose.connect(process.env.MONGODB_URI, {
   dbName: 'Title',
 });
 
-const mongoose = require('mongoose');
-
 const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -40,6 +38,23 @@ const LicenseSchema = new mongoose.Schema({
 });
 
 const License = mongoose.model('License', LicenseSchema);
+
+const ExamMasterSchema = new mongoose.Schema({
+  Exam_Id: { type: Number, required: true, unique: true, min: 0, max: 9999999999 },
+  Exam_Desc: { type: String, required: true },
+  Difficulty_Level: { type: Number, required: true, min: 0, max: 99 },
+  Subject: { type: String, required: true },
+  Exam_Category: { type: String, required: true },
+  No_of_Questions: { type: Number, required: true, min: 0, max: 9999 },
+  Exam_Duration: { type: Number, required: true },
+  Question_Duration: { type: Number, required: true },
+  Author_Name: { type: String, required: true },
+  Audit_Details: { type: Date, default: Date.now }
+});
+
+const Exam_Master = mongoose.model('Exam_Master', ExamMasterSchema);
+
+module.exports = Exam_Master;
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
@@ -242,6 +257,27 @@ router.post('/license', async (req, res) => {
     res.status(200).json({ message: 'License and Agreement updated successfully' });
   } catch (error) {
     console.error('Error updating license:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/exams', async (req, res) => {
+  try {
+    const newExam = new Exam_Master(req.body);
+    await newExam.save();
+    res.status(201).json(newExam);
+  } catch (error) {
+    console.error('Error creating exam:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/exams', async (req, res) => {
+  try {
+    const exams = await Exam_Master.find();
+    res.status(200).json(exams);
+  } catch (error) {
+    console.error('Error retrieving exams:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

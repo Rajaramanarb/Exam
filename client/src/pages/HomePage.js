@@ -94,7 +94,7 @@ const HomePage = () => {
       </div>
 
       {/* Footer */}
-      <footer className="bg-light text-center text-lg-start" style={{ height: '10cm' }}>
+      <footer className="bg-light text-center text-lg-start" style={{ height: '5cm' }}>
         <div className="container p-4">
           <div className="row">
             <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
