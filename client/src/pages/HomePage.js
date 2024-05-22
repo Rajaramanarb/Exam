@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const [licenseText, setLicenseText] = useState(localStorage.getItem('license') || '');
+  const [licenseVersion, setLicenseVersion] = useState(localStorage.getItem('licenseVersion') || 0);
 
   // Retrieve user info from local storage
   const user = JSON.parse(localStorage.getItem('user'));
@@ -14,6 +16,29 @@ const HomePage = () => {
     localStorage.removeItem('user');
     navigate('/login');
   };
+
+  useEffect(() => {
+    const fetchLicense = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/license');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.version > licenseVersion) {
+            localStorage.setItem('license', data.text);
+            localStorage.setItem('licenseVersion', data.version);
+            setLicenseText(data.text);
+            setLicenseVersion(data.version);
+          }
+        } else {
+          console.error('Failed to fetch license:', response.statusText);
+        }
+      } catch (error) {
+        console.error('Error fetching license:', error);
+      }
+    };
+
+    fetchLicense();
+  }, [licenseVersion]);
 
   return (
     <div>
@@ -52,7 +77,7 @@ const HomePage = () => {
         <div style={{ width: '60cm', height: '70cm', overflowY: 'auto', padding: '10px' }}>
           <div>
             {/* Your main content goes here */}
-            <p>Main content area with scroll bar</p>
+            <p>Main content area</p>
           </div>
         </div>
 
@@ -74,7 +99,7 @@ const HomePage = () => {
           <div className="row">
             <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
               <h5 className="text-uppercase">License & Agreement</h5>
-              <p>Details about license and agreement.</p>
+              <p>{licenseText || 'Loading...'}</p>
             </div>
             <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
               <h5 className="text-uppercase">Contact Us</h5>

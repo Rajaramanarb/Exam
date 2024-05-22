@@ -68,6 +68,7 @@ const RegistrationForm = () => {
           console.error('Registration failed');
         }
       } catch (error) {
+        toast.error('Email already exists');
         console.error('Error during registration:', error);
       }
     }

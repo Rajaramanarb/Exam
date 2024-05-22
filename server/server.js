@@ -22,13 +22,24 @@ mongoose.connect(process.env.MONGODB_URI, {
   dbName: 'Title',
 });
 
+const mongoose = require('mongoose');
+
 const UserSchema = new mongoose.Schema({
-  name: String,
-  email: String,
-  password: String,
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
 });
 
 const User = mongoose.model('User', UserSchema);
+
+module.exports = User;
+
+const LicenseSchema = new mongoose.Schema({
+  text: String,
+  version: { type: Number, default: 1 }, // Add version field
+});
+
+const License = mongoose.model('License', LicenseSchema);
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
@@ -43,6 +54,10 @@ router.post('/register', async (req, res) => {
 
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
+    if (error.code === 11000) {
+      // Duplicate key error, code 11000 is specific to unique index violations
+      return res.status(400).json({ error: 'Email already exists' });
+    }
     console.error('Error during registration:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
@@ -190,6 +205,46 @@ async function sendOTPEmail(email, otp) {
     throw error;
   }
 }
+
+router.get('/license', async (req, res) => {
+  try {
+    const license = await License.findOne(); // Assuming there's only one license document
+    if (license) {
+      res.json({ text: license.text, version: license.version });
+    } else {
+      res.status(404).json({ error: 'License and Agreement not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching license:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/license', async (req, res) => {
+  const { text } = req.body;
+
+  if (!text) {
+    return res.status(400).json({ error: 'License text is required' });
+  }
+
+  try {
+    let license = await License.findOne();
+
+    if (license) {
+      license.text = text;
+      license.version += 1; // Increment the version number
+      await license.save();
+    } else {
+      license = new License({ text, version: 1 });
+      await license.save();
+    }
+
+    res.status(200).json({ message: 'License and Agreement updated successfully' });
+  } catch (error) {
+    console.error('Error updating license:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
