@@ -4,6 +4,7 @@ import RegistrationForm from './pages/RegistrationForm';
 import LoginForm from './pages/LoginForm';
 import HomePage from './pages/HomePage';
 import PasswordReset from './pages/PasswordReset';
+import ExamForm from './pages/ExamForm';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -20,6 +21,7 @@ const App = () => {
           <Route index element={<HomePage />} />
           <Route path="Registration" element={<RegistrationForm />} />
           <Route path="forget-password" element={<PasswordReset />} />
+          <Route path="ExamForm" element={<ExamForm />} />
         </Route>
       </Routes>
       <hr />
