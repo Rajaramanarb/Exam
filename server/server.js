@@ -48,8 +48,11 @@ const ExamMasterSchema = new mongoose.Schema({
   Exam_Duration: { type: Number, required: true },
   Question_Duration: { type: Number, required: true },
   Author_Name: { type: String, required: true },
-  Audit_Details_UST: { type: Date, default: Date.now },
-  Exam_Valid_Upto: { type: Date, required: true }
+  Audit_Details: {
+    type: String,
+    default: () => moment().tz('Asia/Kolkata').format('YYYY-MM-DD hh:mm A')
+  },
+  Exam_Valid_Upto: { type: String, required: true }
 });
 
 ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });
@@ -222,6 +225,7 @@ router.post('/license', async (req, res) => {
 router.post('/exams', async (req, res) => {
   try {
     const examData = req.body;
+
     const newExam = new Exam_Master(examData);
     await newExam.save();
     res.status(201).json(newExam);
@@ -231,17 +235,10 @@ router.post('/exams', async (req, res) => {
   }
 });
 
-router.get('/exams', async (req, res) => {
+app.get('/exams', async (req, res) => {
   try {
     const exams = await Exam_Master.find();
-
-    const examsWithIST = exams.map(exam => {
-      const examObj = exam.toObject();
-      examObj.Audit_Details_IST = moment(exam.Audit_Details).tz('Asia/Kolkata').toDate();
-      return examObj;
-    });
-
-    res.status(200).json(examsWithIST);
+    res.status(200).json(exams);
   } catch (error) {
     console.error('Error retrieving exams:', error);
     res.status(500).json({ error: 'Internal Server Error' });

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import moment from 'moment';
 
 const ExamForm = () => {
   const [examDetails, setExamDetails] = useState({
@@ -27,7 +28,13 @@ const ExamForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:5000/exams', examDetails);
+      // Format the Exam_Valid_Upto date exactly as the user inputs
+      const examData = {
+        ...examDetails,
+        Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
+      };
+
+      const response = await axios.post('http://localhost:5000/exams', examData);
       console.log('Exam details saved:', response.data);
       toast.success('Exam details saved');
     } catch (error) {
