@@ -59,6 +59,21 @@ ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });
 
 const Exam_Master = mongoose.model('Exam_Master', ExamMasterSchema);
 
+const QuestionMasterSchema = new mongoose.Schema({
+  Exam_ID: { type: Number, required: true, ref: 'Exam_Master' },
+  Question_ID: { type: Number, unique: true },
+  Question: { type: String, required: true },
+  Answer_1: { type: String, required: true },
+  Answer_2: { type: String, required: true },
+  Answer_3: { type: String, required: true },
+  Answer_4: { type: String, required: true },
+  Correct_Answer: { type: Number, required: true, min: 1, max: 4 }
+});
+
+QuestionMasterSchema.plugin(AutoIncrement, { inc_field: 'Question_ID', start_seq: 1 });
+
+const Question_Master = mongoose.model('Question_Master', QuestionMasterSchema);
+
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
 
@@ -241,6 +256,19 @@ app.get('/exams', async (req, res) => {
     res.status(200).json(exams);
   } catch (error) {
     console.error('Error retrieving exams:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/questions', async (req, res) => {
+  try {
+    const questionData = req.body;
+
+    const newQuestion = new Question_Master(questionData);
+    await newQuestion.save();
+    res.status(201).json(newQuestion);
+  } catch (error) {
+    console.error('Error creating question:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

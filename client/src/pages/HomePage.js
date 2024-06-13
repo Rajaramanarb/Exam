@@ -66,7 +66,7 @@ const HomePage = () => {
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
           <ul className="list-group">
             <li className="list-group-item"><Link to="/take-exam">Take an Exam</Link></li>
-            <li className="list-group-item"><Link to="/host-exam">Host an Exam</Link></li>
+            <li className="list-group-item"><Link to="/ExamForm">Host an Exam</Link></li>
           </ul>
           <div className="mt-3">
             <p>Ad Space</p>

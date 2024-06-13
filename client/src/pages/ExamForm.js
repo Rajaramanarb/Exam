@@ -3,6 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 const ExamForm = () => {
   const [examDetails, setExamDetails] = useState({
@@ -16,6 +17,8 @@ const ExamForm = () => {
     Author_Name: '',
     Exam_Valid_Upto: ''
   });
+  
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -28,7 +31,6 @@ const ExamForm = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Format the Exam_Valid_Upto date exactly as the user inputs
       const examData = {
         ...examDetails,
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
@@ -37,6 +39,7 @@ const ExamForm = () => {
       const response = await axios.post('http://localhost:5000/exams', examData);
       console.log('Exam details saved:', response.data);
       toast.success('Exam details saved');
+      navigate(`/questions/${response.data.Exam_Id}/${examDetails.No_of_Questions}`);
     } catch (error) {
       console.error('Error saving exam details:', error);
       toast.error('Error saving exam details');
