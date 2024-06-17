@@ -273,6 +273,36 @@ router.post('/questions', async (req, res) => {
   }
 });
 
+router.get('/questions/:examId/:index', async (req, res) => {
+  try {
+    const { examId, index } = req.params;
+    const question = await Question_Master.findOne({ Exam_ID: examId }).skip(index);
+    res.json(question);
+  } catch (error) {
+    console.error('Error fetching question:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.put('/questions/:examId/:index', async (req, res) => {
+  try {
+    const { examId, index } = req.params;
+    const questionData = req.body;
+
+    const question = await Question_Master.findOne({ Exam_ID: examId }).skip(index);
+    if (!question) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+
+    Object.assign(question, questionData);
+    await question.save();
+    res.json({ message: 'Question updated successfully' });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.use('/', router);
 
 app.listen(PORT, () => {

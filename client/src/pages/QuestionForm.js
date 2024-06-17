@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,6 +16,23 @@ const QuestionForm = () => {
     Answer_4: '',
     Correct_Answer: ''
   });
+  const [isUpdate, setIsUpdate] = useState(false);
+
+  useEffect(() => {
+    if (isUpdate) {
+      fetchQuestionDetails(questionIndex);
+    }
+  }, [questionIndex]);
+
+  const fetchQuestionDetails = async (index) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/questions/${examId}/${index}`);
+      setQuestionDetails(response.data);
+    } catch (error) {
+      console.error('Error fetching question details:', error);
+      toast.error('Error fetching question details');
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,7 +50,12 @@ const QuestionForm = () => {
         ...questionDetails
       };
 
-      await axios.post('http://localhost:5000/questions', questionData);
+      if (isUpdate) {
+        await axios.put(`http://localhost:5000/questions/${examId}/${questionIndex}`, questionData);
+      } else {
+        await axios.post('http://localhost:5000/questions', questionData);
+      }
+
       if (questionIndex + 1 < noOfQuestions) {
         setQuestionIndex(questionIndex + 1);
         setQuestionDetails({
@@ -52,6 +74,14 @@ const QuestionForm = () => {
     } catch (error) {
       console.error('Error saving question:', error);
       toast.error('Error saving question');
+    }
+  };
+
+  const handlePrevious = async (e) => {
+    e.preventDefault();
+    if (questionIndex > 0) {
+      setQuestionIndex(questionIndex - 1);
+      setIsUpdate(true);
     }
   };
 
@@ -130,9 +160,16 @@ const QuestionForm = () => {
             <option value="4">Answer 4</option>
           </select>
         </div>
-        <button type="submit" className="btn btn-primary">
-          {questionIndex + 1 < noOfQuestions ? 'Next' : 'Submit'}
-        </button>
+        <div className="d-flex justify-content-between">
+          {questionIndex > 0 && (
+            <button type="button" className="btn btn-secondary" onClick={handlePrevious}>
+              Previous
+            </button>
+          )}
+          <button type="submit" className="btn btn-primary">
+            {questionIndex + 1 < noOfQuestions ? 'Next' : 'Submit'}
+          </button>
+        </div>
       </form>
     </div>
   );
