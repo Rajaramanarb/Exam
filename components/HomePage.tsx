@@ -1,24 +1,31 @@
-// app/homepage/page.tsx
 "use client";
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Dropdown } from 'react-bootstrap';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  Button,
+  Menu,
+  MenuItem,
+  Container,
+  Grid,
+  Box,
+  List,
+  ListItem,
+  ListItemText,
+  CssBaseline,
+} from '@mui/material';
+import { useUser, UserButton } from '@clerk/nextjs';
 
 const HomePage: React.FC = () => {
   const router = useRouter();
   const [licenseText, setLicenseText] = useState<string>('');
   const [licenseVersion, setLicenseVersion] = useState<number>(0);
-
-  const user = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem('user') || '{}') : null;
-  const userName = user ? user.name : 'Guest';
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    router.push('/login');
-  };
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const { isLoaded, user } = useUser();
 
   useEffect(() => {
     const fetchLicense = async () => {
@@ -35,76 +42,99 @@ const HomePage: React.FC = () => {
         console.error('Error fetching license:', error);
       }
     };
-
+  
     fetchLicense();
   }, []);
 
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <div>
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div className="container-fluid">
-          <Link className="navbar-brand" href="/">Home</Link>
-          <div className="collapse navbar-collapse justify-content-end">
-            <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">
-                Welcome, {userName}
-              </Dropdown.Toggle>
-              <Dropdown.Menu>
-                <Dropdown.Item href="#/action-1">Statistics</Dropdown.Item>
-                <Dropdown.Item href="#/action-2">Profile</Dropdown.Item>
-                <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
-              </Dropdown.Menu>
-            </Dropdown>
-          </div>
-        </div>
-      </nav>
+      <CssBaseline />
+      <AppBar position="static">
+        <Toolbar>
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+            <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>Home</Link>
+          </Typography>
+          {isLoaded && user ? (
+            <>
+              <Button color="inherit" onClick={handleMenuClick}>Welcome, {user.firstName}</Button>
+              <Menu
+                anchorEl={anchorEl}
+                open={Boolean(anchorEl)}
+                onClose={handleMenuClose}
+              >
+                <MenuItem onClick={handleMenuClose}><Link href="#/action-1">Statistics</Link></MenuItem>
+                <MenuItem onClick={handleMenuClose}><Link href="#/action-2">Profile</Link></MenuItem>
+              </Menu>
+              <UserButton afterSignOutUrl='/' />
+            </>
+          ) : (
+            <Button color="inherit" onClick={() => router.push('/login')}>Login</Button>
+          )}
+        </Toolbar>
+      </AppBar>
 
-      <div className="container-fluid" style={{ height: '70cm', display: 'flex' }}>
-        <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
-          <ul className="list-group">
-            <li className="list-group-item"><Link href="/take-exam">Take an Exam</Link></li>
-            <li className="list-group-item"><Link href="/ExamForm">Host an Exam</Link></li>
-          </ul>
-          <div className="mt-3">
-            <p>Ad Space</p>
-          </div>
-        </div>
+      <Container maxWidth="lg" sx={{ display: 'flex', height: '100vh', mt: 2 }}>
+        <Box sx={{ width: '20%', bgcolor: '#e9ecef', p: 2 }}>
+          <Typography variant="h6">Options</Typography>
+          <List>
+            <ListItem button component={Link} href="/take-exam">
+              <ListItemText primary="Take an Exam" />
+            </ListItem>
+            <ListItem button component={Link} href="/ExamForm">
+              <ListItemText primary="Host an Exam" />
+            </ListItem>
+          </List>
+          <Box mt={3}>
+            <Typography>Ad Space</Typography>
+          </Box>
+        </Box>
 
-        <div style={{ width: '60cm', height: '70cm', overflowY: 'auto', padding: '10px' }}>
-          <div>
-            <p>Main content area</p>
-          </div>
-        </div>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+          <Typography>Main content area</Typography>
+        </Box>
 
-        <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
-          <ul className="list-group">
-            <li className="list-group-item"><Link href="/Registration">Sign Up</Link></li>
-            <li className="list-group-item"><Link href="/login">Login</Link></li>
-          </ul>
-          <div className="mt-3">
-            <p>Ad Space</p>
-          </div>
-        </div>
-      </div>
+        <Box sx={{ width: '20%', bgcolor: '#e9ecef', p: 2 }}>
+          <Typography variant="h6">User Links</Typography>
+          <List>
+            <ListItem button component={Link} href="/Registration">
+              <ListItemText primary="Sign Up" />
+            </ListItem>
+            <ListItem button component={Link} href="/login">
+              <ListItemText primary="Login" />
+            </ListItem>
+          </List>
+          <Box mt={3}>
+            <Typography>Ad Space</Typography>
+          </Box>
+        </Box>
+      </Container>
 
-      <footer className="bg-light text-center text-lg-start" style={{ height: '5cm' }}>
-        <div className="container p-4">
-          <div className="row">
-            <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
-              <h5 className="text-uppercase">License & Agreement</h5>
-              <p>{licenseText || 'Loading...'}</p>
-            </div>
-            <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
-              <h5 className="text-uppercase">Contact Us</h5>
-              <p>Details about how to contact us.</p>
-            </div>
-            <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
-              <h5 className="text-uppercase">About Us</h5>
-              <p>Information about us.</p>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Box component="footer" sx={{ bgcolor: 'lightgray', textAlign: 'center', p: 4 }}>
+        <Container>
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6">License & Agreement</Typography>
+              <Typography>{licenseText || 'Loading...'}</Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6">Contact Us</Typography>
+              <Typography>Details about how to contact us.</Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <Typography variant="h6">About Us</Typography>
+              <Typography>Information about us.</Typography>
+            </Grid>
+          </Grid>
+        </Container>
+      </Box>
     </div>
   );
 };
