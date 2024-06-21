@@ -1,3 +1,4 @@
+// exam/lib/actions/license.actions.ts
 "use server";
 
 import License from "../database/models/license.model";

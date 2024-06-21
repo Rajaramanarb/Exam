@@ -1,3 +1,4 @@
+// exam/components/HomePage.tsx
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -33,8 +34,18 @@ const HomePage: React.FC = () => {
         const response = await fetch('/api/license');
         if (response.ok) {
           const data = await response.json();
-          setLicenseText(data.text);
-          setLicenseVersion(data.version);
+          const storedVersion = localStorage.getItem('licenseVersion');
+          const storedText = localStorage.getItem('licenseText');
+
+          if (!storedVersion || parseInt(storedVersion) !== data.version) {
+            localStorage.setItem('licenseText', data.text);
+            localStorage.setItem('licenseVersion', data.version.toString());
+            setLicenseText(data.text);
+            setLicenseVersion(data.version);
+          } else {
+            setLicenseText(storedText || '');
+            setLicenseVersion(parseInt(storedVersion));
+          }
         } else {
           console.error('Failed to fetch license:', response.statusText);
         }
@@ -42,7 +53,7 @@ const HomePage: React.FC = () => {
         console.error('Error fetching license:', error);
       }
     };
-  
+
     fetchLicense();
   }, []);
 
