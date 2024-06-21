@@ -39,10 +39,10 @@ const ExamForm: React.FC = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
       };
 
-      const response = await axios.post('http://localhost:5000/exams', examData);
+      const response = await axios.post('/api/exam', examData);
       console.log('Exam details saved:', response.data);
       toast.success('Exam details saved');
-      router.push(`/questions/${response.data.Exam_Id}/${examDetails.No_of_Questions}`);
+      //router.push(`/QuestionForm/${response.data.Exam_Id}/${examDetails.No_of_Questions}`);
     } catch (error) {
       console.error('Error saving exam details:', error);
       toast.error('Error saving exam details');
