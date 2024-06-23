@@ -27,7 +27,18 @@ const QuestionForm = () => {
   const fetchQuestionDetails = async (index) => {
     try {
       const response = await axios.get(`http://localhost:5000/questions/${examId}/${index}`);
-      setQuestionDetails(response.data);
+      if (response.data) {
+        setQuestionDetails(response.data);
+      } else {
+        setQuestionDetails({
+          Question: '',
+          Answer_1: '',
+          Answer_2: '',
+          Answer_3: '',
+          Answer_4: '',
+          Correct_Answer: ''
+        });
+      }
     } catch (error) {
       console.error('Error fetching question details:', error);
       toast.error('Error fetching question details');
@@ -66,6 +77,7 @@ const QuestionForm = () => {
           Answer_4: '',
           Correct_Answer: ''
         });
+        setIsUpdate(false);
         toast.success('Question saved, please enter the next question');
       } else {
         toast.success('All questions saved');
