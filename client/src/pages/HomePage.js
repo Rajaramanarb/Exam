@@ -2,20 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Dropdown } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 
 const HomePage = () => {
+  const { user } = useUser();
   const navigate = useNavigate();
   const [licenseText, setLicenseText] = useState(localStorage.getItem('license') || '');
   const [licenseVersion, setLicenseVersion] = useState(localStorage.getItem('licenseVersion') || 0);
-
-  // Retrieve user info from local storage
-  const user = JSON.parse(localStorage.getItem('user'));
-  const userName = user ? user.name : "Guest";
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
 
   useEffect(() => {
     const fetchLicense = async () => {
@@ -47,15 +41,20 @@ const HomePage = () => {
           <Link className="navbar-brand" to="/">Home</Link>
           <div className="collapse navbar-collapse justify-content-end">
             <Dropdown>
-              <Dropdown.Toggle variant="success" id="dropdown-basic">
-                Welcome, {userName}
+              <Dropdown.Toggle variant="btn btn-primary me-2" id="dropdown-basic">
+                Welcome, {user?.firstName || 'Guest'} 
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <Dropdown.Item href="#/action-1">Statistics</Dropdown.Item>
                 <Dropdown.Item href="#/action-2">Profile</Dropdown.Item>
-                <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
+            <SignedOut>
+              <SignInButton mode='modal' className="btn btn-primary me-2" />
+            </SignedOut>
+            <SignedIn>
+              <UserButton />
+            </SignedIn>
           </div>
         </div>
       </nav>
@@ -65,8 +64,14 @@ const HomePage = () => {
         {/* Left Sidebar */}
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
           <ul className="list-group">
-            <li className="list-group-item"><Link to="/take-exam">Take an Exam</Link></li>
-            <li className="list-group-item"><Link to="/ExamForm">Host an Exam</Link></li>
+            <SignedIn>
+              <li className="list-group-item"><Link to="/take-exam">Take an Exam</Link></li>
+              <li className="list-group-item"><Link to="/ExamForm">Host an Exam</Link></li>
+            </SignedIn>
+            <SignedOut>
+              <li className="list-group-item" onClick={() => alert('Please sign in to take an exam.')}>Take an Exam</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to host an exam.')}>Host an Exam</li>
+            </SignedOut>
           </ul>
           <div className="mt-3">
             <p>Ad Space</p>
@@ -83,10 +88,6 @@ const HomePage = () => {
 
         {/* Right Sidebar */}
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
-          <ul className="list-group">
-            <li className="list-group-item"><Link to="/Registration">Sign Up</Link></li>
-            <li className="list-group-item"><Link to="/login">Login</Link></li>
-          </ul>
           <div className="mt-3">
             <p>Ad Space</p>
           </div>

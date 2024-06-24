@@ -5,8 +5,10 @@ import 'react-toastify/dist/ReactToastify.css';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
+import { useUser } from "@clerk/clerk-react";
 
 const ExamForm = () => {
+  const { user } = useUser();
   const [examDetails, setExamDetails] = useState({
     Exam_Desc: '',
     Difficulty_Level: '',
@@ -15,7 +17,8 @@ const ExamForm = () => {
     No_of_Questions: '',
     Exam_Duration: '',
     Question_Duration: '',
-    Author_Name: '',
+    Author_Name: user?.firstName,
+    Author_Id: user?.id,
     Exam_Valid_Upto: ''
   });
 
@@ -191,17 +194,6 @@ const ExamForm = () => {
             className="form-control"
             name="Question_Duration"
             value={examDetails.Question_Duration}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Author Name</label>
-          <input
-            type="text"
-            className="form-control"
-            name="Author_Name"
-            value={examDetails.Author_Name}
             onChange={handleChange}
             required
           />

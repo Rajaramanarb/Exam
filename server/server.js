@@ -5,9 +5,7 @@ const serverless = require('serverless-http');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const bcrypt = require('bcrypt');
 const moment = require('moment-timezone');
-const nodemailer = require('nodemailer');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const app = express();
@@ -24,9 +22,31 @@ mongoose.connect(process.env.MONGODB_URI, {
 });
 
 const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
+  clerkId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  username: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  photo: {
+    type: String,
+    required: true,
+  },
+  firstName: {
+    type: String,
+  },
+  lastName: {
+    type: String,
+  },
 });
 
 const User = mongoose.model('User', UserSchema);
@@ -48,6 +68,7 @@ const ExamMasterSchema = new mongoose.Schema({
   Exam_Duration: { type: Number, required: true },
   Question_Duration: { type: Number, required: true },
   Author_Name: { type: String, required: true },
+  Author_Id: { type: String, required: true },
   Audit_Details: {
     type: String,
     default: () => moment().tz('Asia/Kolkata').format('YYYY-MM-DD hh:mm A')
@@ -73,129 +94,6 @@ const QuestionMasterSchema = new mongoose.Schema({
 QuestionMasterSchema.plugin(AutoIncrement, { inc_field: 'Question_ID', start_seq: 1 });
 
 const Question_Master = mongoose.model('Question_Master', QuestionMasterSchema);
-
-router.post('/register', async (req, res) => {
-  const { name, email, password } = req.body;
-
-  try {
-    const saltRounds = 10;
-    const salt = await bcrypt.genSalt(saltRounds);
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const newUser = new User({ name, email, password: hashedPassword });
-
-    await newUser.save();
-
-    res.status(201).json({ message: 'User registered successfully' });
-  } catch (error) {
-    if (error.code === 11000) {
-      return res.status(400).json({ error: 'Email already exists' });
-    }
-    console.error('Error during registration:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email });
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid password' });
-    }
-
-    res.status(200).json({
-      message: 'Login successful',
-      name: user.name,
-      email: user.email,
-    });
-  } catch (error) {
-    console.error('Error during login:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-router.post('/forget-password', async (req, res) => {
-  try {
-    const { email } = req.body;
-    const otp = generateRandomOTP();
-    await sendOTPEmail(email, otp);
-
-    res.json({ message: 'OTP sent to email. Please check your email.' });
-  } catch (error) {
-    console.error('Error sending OTP:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-router.post('/reset-password', async (req, res) => {
-  try {
-    const { email, otp, newPassword } = req.body;
-
-    if (!email || !otp || !newPassword) {
-      return res.status(400).json({ error: 'Email, OTP, and new password are required' });
-    }
-
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-
-    const updatedUser = await User.findOneAndUpdate(
-      { email },
-      { $set: { password: hashedPassword } },
-      { new: true }
-    );
-
-    if (updatedUser) {
-      return res.json({ message: 'Password reset successful' });
-    } else {
-      return res.status(404).json({ error: 'User not found' });
-    }
-  } catch (error) {
-    console.error('Error resetting password:', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-const emailConfig = {
-  user: process.env.EMAIL_USER,
-  pass: process.env.EMAIL_PASS,
-};
-
-const smtpTransport = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: emailConfig.user,
-    pass: emailConfig.pass,
-  },
-});
-
-function generateRandomOTP() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-async function sendOTPEmail(email, otp) {
-  try {
-    const mailOptions = {
-      to: email,
-      from: '"Family Tree" <rajaramanarbpubg@gmail.com>',
-      subject: 'Password Reset OTP',
-      html: `<p>Your OTP for password reset is: <strong>${otp}</strong>. This OTP is valid for a short period.</p>`,
-    };
-
-    const info = await smtpTransport.sendMail(mailOptions);
-    console.log('Email sent:', info.response);
-  } catch (error) {
-    console.error('Error sending OTP email:', error);
-    throw error;
-  }
-}
 
 router.get('/license', async (req, res) => {
   try {
