@@ -14,7 +14,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchLicense = async () => {
       try {
-        const response = await fetch('http://localhost:5000/license');
+        const response = await fetch('https://appsail-50020062734.development.catalystappsail.in/license');
         if (response.ok) {
           const data = await response.json();
           if (data.version > licenseVersion) {

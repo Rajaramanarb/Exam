@@ -97,7 +97,7 @@ const ExamForm = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
       };
 
-      const examResponse = await axios.post('http://localhost:5000/exams', examData);
+      const examResponse = await axios.post('https://appsail-50020062734.development.catalystappsail.in/exams', examData);
       const examId = examResponse.data.Exam_Id;
 
       for (let i = 0; i < questionsToSave.length; i++) {
@@ -105,7 +105,7 @@ const ExamForm = () => {
           Exam_ID: examId,
           ...questionsToSave[i]
         };
-        await axios.post('http://localhost:5000/questions', questionData);
+        await axios.post('https://appsail-50020062734.development.catalystappsail.in/questions', questionData);
       }
 
       toast.success('Exam and all questions saved successfully');
