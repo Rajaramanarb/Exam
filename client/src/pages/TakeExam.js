@@ -22,15 +22,22 @@ const TakeExam = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get('${apiUrl}/exams');
-        const validExams = response.data.filter(exam => moment().isBefore(moment(exam.Exam_Valid_Upto, "YYYY-MM-DD hh:mm A")));
-        setExams(validExams);
-        setFilteredExams(validExams);
+        const response = await axios.get(`${apiUrl}/exams`);
+        console.log('API Response:', response);
+    
+        if (Array.isArray(response.data)) {
+          const validExams = response.data.filter(exam => moment().isBefore(moment(exam.Exam_Valid_Upto, "YYYY-MM-DD hh:mm A")));
+          setExams(validExams);
+          setFilteredExams(validExams);
+        } else {
+          console.error('Expected an array but received:', response.data);
+          toast.error('Unexpected data format');
+        }
       } catch (error) {
         console.error('Error retrieving exams:', error);
         toast.error('Error retrieving exams');
       }
-    };
+    };    
 
     fetchExams();
   }, []);
