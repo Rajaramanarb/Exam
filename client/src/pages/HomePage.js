@@ -10,11 +10,14 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [licenseText, setLicenseText] = useState(localStorage.getItem('license') || '');
   const [licenseVersion, setLicenseVersion] = useState(localStorage.getItem('licenseVersion') || 0);
+  const apiUrl = process.env.NODE_ENV === 'production' 
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchLicense = async () => {
       try {
-        const response = await fetch('https://appsail-50020062734.development.catalystappsail.in/license');
+        const response = await fetch('${apiUrl}/license');
         if (response.ok) {
           const data = await response.json();
           if (data.version > licenseVersion) {
@@ -45,8 +48,7 @@ const HomePage = () => {
                 Welcome, {user?.firstName || 'Guest'} 
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item href="#/action-1">Statistics</Dropdown.Item>
-                <Dropdown.Item href="#/action-2">Profile</Dropdown.Item>
+                <Dropdown.Item href="statistics">Statistics</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
             <SignedOut>
@@ -65,7 +67,7 @@ const HomePage = () => {
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
           <ul className="list-group">
             <SignedIn>
-              <li className="list-group-item"><Link to="/take-exam">Take an Exam</Link></li>
+              <li className="list-group-item"><Link to="/TakeExam">Take an Exam</Link></li>
               <li className="list-group-item"><Link to="/ExamForm">Host an Exam</Link></li>
             </SignedIn>
             <SignedOut>

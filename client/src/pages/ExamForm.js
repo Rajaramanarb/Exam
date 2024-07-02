@@ -81,6 +81,10 @@ const ExamForm = () => {
     }
   };
 
+  const apiUrl = process.env.NODE_ENV === 'production' 
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+
   const handleQuestionPrevious = () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
@@ -97,7 +101,7 @@ const ExamForm = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
       };
 
-      const examResponse = await axios.post('https://appsail-50020062734.development.catalystappsail.in/exams', examData);
+      const examResponse = await axios.post('${apiUrl}/exams', examData);
       const examId = examResponse.data.Exam_Id;
 
       for (let i = 0; i < questionsToSave.length; i++) {
@@ -105,7 +109,7 @@ const ExamForm = () => {
           Exam_ID: examId,
           ...questionsToSave[i]
         };
-        await axios.post('https://appsail-50020062734.development.catalystappsail.in/questions', questionData);
+        await axios.post('${apiUrl}/questions', questionData);
       }
 
       toast.success('Exam and all questions saved successfully');
@@ -156,14 +160,18 @@ const ExamForm = () => {
         </div>
         <div className="mb-3">
           <label className="form-label">Exam Category</label>
-          <input
-            type="text"
+            <select
             className="form-control"
             name="Exam_Category"
             value={examDetails.Exam_Category}
             onChange={handleChange}
             required
-          />
+            >
+              <option value="">Select Category</option>
+              <option value="School">School</option>
+              <option value="College">College</option>
+              <option value="Others">Others</option>
+            </select>
         </div>
         <div className="mb-3">
           <label className="form-label">Number of Questions</label>
@@ -213,7 +221,7 @@ const ExamForm = () => {
       </form>
 
       <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static">
-        <Modal.Header closeButton>
+        <Modal.Header>
           <Modal.Title>Question Form ({questionIndex + 1} of {examDetails.No_of_Questions})</Modal.Title>
         </Modal.Header>
         <Modal.Body>

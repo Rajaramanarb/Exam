@@ -1,0 +1,43 @@
+.statistics-page {
+    padding: 20px;
+    background-color: #f4f4f9;
+  }
+  
+  .page-title {
+    text-align: center;
+    font-size: 2.5em;
+    color: #333;
+    margin-bottom: 40px;
+  }
+  
+  .charts-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  
+  .chart-container {
+    width: 30%;
+    margin: 20px 0;
+    background: white;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s;
+  }
+  
+  .chart-container:hover {
+    transform: translateY(-10px);
+  }
+  
+  .chart-title {
+    text-align: center;
+    margin-bottom: 10px;
+    font-size: 1.2em;
+    color: #555;
+  }
+  
+  .chart-wrapper {
+    height: 200px;
+  }
+  
