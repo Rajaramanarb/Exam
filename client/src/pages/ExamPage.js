@@ -127,7 +127,7 @@ const ExamPage = () => {
     };
   
     try {
-      await axios.post('http://localhost:9000/exam-results', examResult);
+      await axios.post('${apiUrl}/exam-results', examResult);
       toast.success('Exam results saved successfully!');
     } catch (error) {
       console.error('Error saving exam results:', error);
