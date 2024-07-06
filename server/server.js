@@ -10,7 +10,7 @@ const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const app = express();
 const router = express.Router();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.X_ZOHO_CATALYST_LISTEN_PORT || 9000;
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -94,6 +94,23 @@ const QuestionMasterSchema = new mongoose.Schema({
 QuestionMasterSchema.plugin(AutoIncrement, { inc_field: 'Question_ID', start_seq: 1 });
 
 const Question_Master = mongoose.model('Question_Master', QuestionMasterSchema);
+
+const ExamResultSchema = new mongoose.Schema({
+  Exam_Id: { type: Number, required: true, ref: 'Exam_Master' },
+  Author_Id: { type: String, required: true },
+  Author_Name: { type: String, required: true },
+  Score: { type: Number, required: true },
+  Responses: [
+    {
+      Question_Id: { type: Number, required: true, ref: 'Question_Master' },
+      Selected_Option: { type: Number, required: true },
+      Correct_Answer: { type: Number, required: true },
+      Is_Correct: { type: Boolean, required: true }
+    }
+  ]
+});
+
+const Exam_Result = mongoose.model('Exam_Result', ExamResultSchema);
 
 router.get('/license', async (req, res) => {
   try {
@@ -198,6 +215,44 @@ router.put('/questions/:examId/:index', async (req, res) => {
   } catch (error) {
     console.error('Error updating question:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/exams/:examId', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const exam = await Exam_Master.findOne({ Exam_Id: examId });
+
+    if (!exam) {
+      return res.status(404).json({ error: 'Exam not found' });
+    }
+
+    res.status(200).json(exam);
+  } catch (error) {
+    console.error('Error retrieving exam:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/exam-results', async (req, res) => {
+  try {
+    const examResult = new Exam_Result(req.body);
+    await examResult.save();
+    res.status(201).send(examResult);
+  } catch (error) {
+    console.error('Error saving exam result:', error.message);
+    res.status(500).send({ message: 'Error saving exam result' });
+  }
+});
+
+router.get('/exam-results/:authorId', async (req, res) => {
+  try {
+    const { authorId } = req.params;
+    const results = await Exam_Result.find({ Author_Id: authorId });
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching exam results:', error);
+    res.status(500).send('Error fetching exam results');
   }
 });
 

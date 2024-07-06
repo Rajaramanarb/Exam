@@ -22,7 +22,7 @@ const TakeExam = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/exams`);
+        const response = await axios.get(`http://localhost:9000/exams`);
         console.log('API Response:', response);
     
         if (Array.isArray(response.data)) {

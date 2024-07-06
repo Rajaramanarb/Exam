@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -6,9 +6,12 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
 import { useUser } from "@clerk/clerk-react";
+import Alert from 'react-bootstrap/Alert';
 
 const ExamForm = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
+
   const [examDetails, setExamDetails] = useState({
     Exam_Desc: '',
     Difficulty_Level: '',
@@ -17,11 +20,12 @@ const ExamForm = () => {
     No_of_Questions: '',
     Exam_Duration: '',
     Question_Duration: '',
-    Author_Name: user?.firstName,
-    Author_Id: user?.id,
+    Author_Name: '',
+    Author_Id: '',
     Exam_Valid_Upto: ''
   });
 
+  const [difficultyError, setDifficultyError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -34,7 +38,16 @@ const ExamForm = () => {
     Correct_Answer: ''
   });
 
-  const navigate = useNavigate();
+  // Set Author_Id and Author_Name when user data is available
+  useEffect(() => {
+    if (user) {
+      setExamDetails((prevDetails) => ({
+        ...prevDetails,
+        Author_Name: user.firstName,
+        Author_Id: user.id
+      }));
+    }
+  }, [user]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,6 +55,12 @@ const ExamForm = () => {
       ...examDetails,
       [name]: value,
     });
+
+    if (name === 'Difficulty_Level' && (value < 1 || value > 10)) {
+      setDifficultyError(true);
+    } else {
+      setDifficultyError(false);
+    }
   };
 
   const handleQuestionChange = (e) => {
@@ -101,15 +120,16 @@ const ExamForm = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
       };
 
-      const examResponse = await axios.post('${apiUrl}/exams', examData);
+      const examResponse = await axios.post(`http://localhost:9000/exams`, examData);
       const examId = examResponse.data.Exam_Id;
 
       for (let i = 0; i < questionsToSave.length; i++) {
         const questionData = {
           Exam_ID: examId,
-          ...questionsToSave[i]
+          ...questionsToSave[i],
+          Correct_Answer: parseInt(questionsToSave[i].Correct_Answer) // Ensure Correct_Answer is a number
         };
-        await axios.post('${apiUrl}/questions', questionData);
+        await axios.post(`http://localhost:9000/questions`, questionData);
       }
 
       toast.success('Exam and all questions saved successfully');
@@ -122,81 +142,96 @@ const ExamForm = () => {
 
   return (
     <div className="container mt-5">
-      <h2>Exam Form</h2>
-      <form onSubmit={handleExamSubmit}>
-        {/* Exam form fields */}
-        <div className="mb-3">
-          <label className="form-label">Exam Description</label>
-          <input
-            type="text"
-            className="form-control"
-            name="Exam_Desc"
-            value={examDetails.Exam_Desc}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Difficulty Level</label>
-          <input
-            type="number"
-            className="form-control"
-            name="Difficulty_Level"
-            value={examDetails.Difficulty_Level}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Subject</label>
-          <input
-            type="text"
-            className="form-control"
-            name="Subject"
-            value={examDetails.Subject}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Exam Category</label>
+      <center><h2>Exam Form</h2></center>
+      <form onSubmit={handleExamSubmit} className="p-4 border rounded shadow-sm">
+      <div className="row">
+        <div className="col-md-6">
+          <div className="mb-3">
+            <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
+            <input
+              type="text"
+              className="form-control"
+              name="Exam_Desc"
+              placeholder="Enter the exam description"
+              value={examDetails.Exam_Desc}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+            <input
+              type="number"
+              className="form-control"
+              name="Difficulty_Level"
+              placeholder="Enter the difficulty level (1-10)"
+              value={examDetails.Difficulty_Level}
+              onChange={handleChange}
+              min="1"
+              max="10"
+              required
+            />
+            {difficultyError && (
+              <Alert variant="danger">
+                Difficulty level must be between 1 and 10.
+              </Alert>
+            )}
+          </div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
+            <input
+              type="text"
+              className="form-control"
+              name="Subject"
+              placeholder="Enter the subject"
+              value={examDetails.Subject}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
             <select
-            className="form-control"
-            name="Exam_Category"
-            value={examDetails.Exam_Category}
-            onChange={handleChange}
-            required
+              className="form-control"
+              name="Exam_Category"
+              value={examDetails.Exam_Category}
+              onChange={handleChange}
+              required
             >
               <option value="">Select Category</option>
               <option value="School">School</option>
               <option value="College">College</option>
               <option value="Others">Others</option>
             </select>
+          </div>
         </div>
-        <div className="mb-3">
-          <label className="form-label">Number of Questions</label>
-          <input
-            type="number"
-            className="form-control"
-            name="No_of_Questions"
-            value={examDetails.No_of_Questions}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Exam Duration (minutes)</label>
-          <input
-            type="number"
-            className="form-control"
-            name="Exam_Duration"
-            value={examDetails.Exam_Duration}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label className="form-label">Question Duration (minutes)</label>
+        <div className="col-md-6">
+          <div className="mb-3">
+            <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
+            <input
+              type="number"
+              className="form-control"
+              name="No_of_Questions"
+              placeholder="Enter the number of questions"
+              value={examDetails.No_of_Questions}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+            <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
+            <input
+              type="number"
+              className="form-control"
+              name="Exam_Duration"
+              placeholder="Enter the exam duration in minutes"
+              value={examDetails.Exam_Duration}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className="mb-3">
+          <label className="form-label">Question Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
           <input
             type="number"
             className="form-control"
@@ -206,92 +241,103 @@ const ExamForm = () => {
             required
           />
         </div>
-        <div className="mb-3">
-          <label className="form-label">Exam Valid Up To</label>
-          <input
-            type="datetime-local"
-            className="form-control"
-            name="Exam_Valid_Upto"
-            value={examDetails.Exam_Valid_Upto}
-            onChange={handleChange}
-            required
-          />
+          <div className="mb-3">
+            <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
+            <input
+              type="datetime-local"
+              className="form-control"
+              name="Exam_Valid_Upto"
+              value={examDetails.Exam_Valid_Upto}
+              onChange={handleChange}
+              required
+            />
+          </div>
         </div>
+      </div>
+      <div className="text-center">
         <button type="submit" className="btn btn-primary">Submit</button>
-      </form>
+      </div>
+    </form>
 
-      <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static">
+      <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static" size="lg">
         <Modal.Header>
           <Modal.Title>Question Form ({questionIndex + 1} of {examDetails.No_of_Questions})</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <form>
             <div className="mb-3">
-              <label className="form-label">Question</label>
+              <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
                 name="Question"
-                value={
-                  questionDetails.Question}
+                placeholder="Enter the question"
+                value={questionDetails.Question}
                 onChange={handleQuestionChange}
                 required
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Answer 1</label>
+              <label className="form-label fw-bold">Answer 1<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
                 name="Answer_1"
+                placeholder="Enter answer 1"
                 value={questionDetails.Answer_1}
                 onChange={handleQuestionChange}
                 required
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Answer 2</label>
+              <label className="form-label fw-bold">Answer 2<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
                 name="Answer_2"
+                placeholder="Enter answer 2" 
                 value={questionDetails.Answer_2}
                 onChange={handleQuestionChange}
                 required
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Answer 3</label>
+              <label className="form-label fw-bold">Answer 3<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
                 name="Answer_3"
+                placeholder="Enter answer 3"
                 value={questionDetails.Answer_3}
                 onChange={handleQuestionChange}
                 required
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Answer 4</label>
+              <label className="form-label fw-bold">Answer 4<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
                 name="Answer_4"
+                placeholder="Enter answer 4"
                 value={questionDetails.Answer_4}
                 onChange={handleQuestionChange}
                 required
               />
             </div>
             <div className="mb-3">
-              <label className="form-label">Correct Answer</label>
+              <label className="form-label fw-bold">Correct Answer<span style={{ color: 'red' }}>*</span></label>
               <select
                 className="form-control"
                 name="Correct_Answer"
                 value={questionDetails.Correct_Answer}
-                onChange={handleQuestionChange}
+                onChange={(e) => setQuestionDetails({
+                  ...questionDetails,
+                  Correct_Answer: parseInt(e.target.value) // Convert to number
+                })}
                 required
               >
-                <option value="" disabled>Select the correct answer</option>
+                <option value="">Select Correct Answer</option>
                 <option value="1">Answer 1</option>
                 <option value="2">Answer 2</option>
                 <option value="3">Answer 3</option>
@@ -307,7 +353,7 @@ const ExamForm = () => {
             </Button>
           )}
           <Button variant="primary" onClick={handleQuestionNext}>
-            {questionIndex + 1 < examDetails.No_of_Questions ? 'Next' : 'Submit'}
+            {questionIndex + 1 === parseInt(examDetails.No_of_Questions) ? 'Finish' : 'Next'}
           </Button>
         </Modal.Footer>
       </Modal>

@@ -18,7 +18,7 @@ const Statistics = () => {
           const apiUrl = process.env.NODE_ENV === 'production'
             ? process.env.REACT_APP_API_URL_PRODUCTION
             : process.env.REACT_APP_API_URL_DEVELOPMENT;
-          const response = await axios.get(`${apiUrl}/exam-results/${user.id}`);
+          const response = await axios.get(`http://localhost:9000/exam-results/${user.id}`);
           setExamResults(response.data);
         } catch (error) {
           console.error('Error fetching exam results:', error);

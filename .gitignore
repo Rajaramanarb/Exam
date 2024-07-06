@@ -9,3 +9,6 @@
 # Local Netlify folder
 .netlify
 
+/server/.catalystrc
+/server/app-config.json
+/server/catalyst.json
