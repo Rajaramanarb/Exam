@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
-import { Button } from 'react-bootstrap';
+import { Button, Table } from 'react-bootstrap';
 import moment from 'moment';
 
 const TakeExam = () => {
@@ -75,7 +75,7 @@ const TakeExam = () => {
       <h2>Available Exams</h2>
       <div className="d-flex justify-content-between mb-3">
         <div className="flex-fill me-2">
-          <label className="form-label">Author Name</label>
+          <label className="form-label fw-bold">Author Name</label>
           <select
             className="form-control"
             value={authorName}
@@ -88,7 +88,7 @@ const TakeExam = () => {
           </select>
         </div>
         <div className="flex-fill me-2">
-          <label className="form-label">Subject</label>
+          <label className="form-label fw-bold">Subject</label>
           <select
             className="form-control"
             value={subject}
@@ -101,7 +101,7 @@ const TakeExam = () => {
           </select>
         </div>
         <div className="flex-fill">
-          <label className="form-label">Exam Category</label>
+          <label className="form-label fw-bold">Exam Category</label>
           <select
             className="form-control"
             value={examCategory}
@@ -114,45 +114,55 @@ const TakeExam = () => {
           </select>
         </div>
       </div>
-      <div>
-        {filteredExams.length > 0 ? (
-          filteredExams.map((exam, index) => (
-            <div key={index} className="card mb-3">
-              <div className="card-header text-center">
-                {exam.Exam_Desc}
-              </div>
-              <div className="d-flex flex-row card-body">
-                <div className="flex-fill me-3">
-                  <h5 className="card-title">{exam.Subject}</h5>
-                  <p className="card-text">Author: {exam.Author_Name}</p>
-                  <p className="card-text">Category: {exam.Exam_Category}</p>
-                  <p className="card-text">Difficulty Level: {exam.Difficulty_Level}</p>
-                  <p className="card-text">Number of Questions: {exam.No_of_Questions}</p>
-                </div>
-                <div className="flex-fill me-3">
-                  <p className="card-text">Exam Duration: {exam.Exam_Duration} min</p>
-                  <p className="card-text">Question Duration: {exam.Question_Duration} min</p>
-                  <p className="card-text">Valid Upto: {exam.Exam_Valid_Upto}</p>
-                  <p className="card-text">Exam ID: {exam.Exam_Id}</p>
-                </div>
-                <div className="flex-shrink-0">
+      <Table class="table table-hover">
+        <thead class="thead-dark">
+          <tr>
+            <th>Exam ID</th>
+            <th>Description</th>
+            <th>Subject</th>
+            <th>Author</th>
+            <th>Difficulty Level</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {filteredExams.length > 0 ? (
+            filteredExams.map((exam, index) => (
+              <tr key={index}>
+                <td>{exam.Exam_Id}</td>
+                <td>{exam.Exam_Desc}</td>
+                <td>{exam.Subject}</td>
+                <td>{exam.Author_Name}</td>
+                <td>
+          <span className={`text fw-bold ${
+            exam.Difficulty_Level === 'Easy'
+              ? 'text-success'
+              : exam.Difficulty_Level === 'Medium'
+              ? 'text-warning'
+              : exam.Difficulty_Level === 'Hard'
+              ? 'text-danger'
+              : ''
+          }`}>
+            {exam.Difficulty_Level}
+          </span>
+        </td>
+                <td>
                   <Button
                     variant="primary"
                     onClick={() => handleTakeExam(exam)}
                   >
                     Take Exam
                   </Button>
-                </div>
-              </div>
-              <div className="card-footer text-body-secondary text-center">
-                {moment(exam.Audit_Details, "YYYY-MM-DD hh:mm A").fromNow()}
-              </div>
-            </div>
-          ))
-        ) : (
-          <p>No exams available.</p>
-        )}
-      </div>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="6" className="text-center">No exams available.</td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
     </div>
   );
 };

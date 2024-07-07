@@ -25,7 +25,6 @@ const ExamForm = () => {
     Exam_Valid_Upto: ''
   });
 
-  const [difficultyError, setDifficultyError] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -55,13 +54,17 @@ const ExamForm = () => {
       ...examDetails,
       [name]: value,
     });
-
-    if (name === 'Difficulty_Level' && (value < 1 || value > 10)) {
-      setDifficultyError(true);
-    } else {
-      setDifficultyError(false);
-    }
   };
+
+  useEffect(() => {
+    if (examDetails.Exam_Duration && examDetails.No_of_Questions) {
+      const questionDuration = (examDetails.Exam_Duration / examDetails.No_of_Questions).toFixed(1);
+      setExamDetails((prevDetails) => ({
+        ...prevDetails,
+        Question_Duration: questionDuration
+      }));
+    }
+  }, [examDetails.Exam_Duration, examDetails.No_of_Questions]);
 
   const handleQuestionChange = (e) => {
     const { name, value } = e.target;
@@ -144,120 +147,117 @@ const ExamForm = () => {
     <div className="container mt-5">
       <center><h2>Exam Form</h2></center>
       <form onSubmit={handleExamSubmit} className="p-4 border rounded shadow-sm">
-      <div className="row">
-        <div className="col-md-6">
-          <div className="mb-3">
-            <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
-            <input
-              type="text"
-              className="form-control"
-              name="Exam_Desc"
-              placeholder="Enter the exam description"
-              value={examDetails.Exam_Desc}
-              onChange={handleChange}
-              required
-            />
+        <div className="row">
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="text"
+                className="form-control"
+                name="Exam_Desc"
+                placeholder="Enter the exam description"
+                value={examDetails.Exam_Desc}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+              <select
+                className="form-control"
+                name="Difficulty_Level"
+                value={examDetails.Difficulty_Level}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Difficulty Level</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="text"
+                className="form-control"
+                name="Subject"
+                placeholder="Enter the subject"
+                value={examDetails.Subject}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
+              <select
+                className="form-control"
+                name="Exam_Category"
+                value={examDetails.Exam_Category}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Category</option>
+                <option value="School">School</option>
+                <option value="College">College</option>
+                <option value="Others">Others</option>
+              </select>
+            </div>
           </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
-            <input
-              type="number"
-              className="form-control"
-              name="Difficulty_Level"
-              placeholder="Enter the difficulty level (1-10)"
-              value={examDetails.Difficulty_Level}
-              onChange={handleChange}
-              min="1"
-              max="10"
-              required
-            />
-            {difficultyError && (
-              <Alert variant="danger">
-                Difficulty level must be between 1 and 10.
-              </Alert>
-            )}
-          </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
-            <input
-              type="text"
-              className="form-control"
-              name="Subject"
-              placeholder="Enter the subject"
-              value={examDetails.Subject}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
-            <select
-              className="form-control"
-              name="Exam_Category"
-              value={examDetails.Exam_Category}
-              onChange={handleChange}
-              required
-            >
-              <option value="">Select Category</option>
-              <option value="School">School</option>
-              <option value="College">College</option>
-              <option value="Others">Others</option>
-            </select>
-          </div>
-        </div>
-        <div className="col-md-6">
-          <div className="mb-3">
-            <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
-            <input
-              type="number"
-              className="form-control"
-              name="No_of_Questions"
-              placeholder="Enter the number of questions"
-              value={examDetails.No_of_Questions}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
-            <input
-              type="number"
-              className="form-control"
-              name="Exam_Duration"
-              placeholder="Enter the exam duration in minutes"
-              value={examDetails.Exam_Duration}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className="mb-3">
-          <label className="form-label">Question Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
-          <input
-            type="number"
-            className="form-control"
-            name="Question_Duration"
-            value={examDetails.Question_Duration}
-            onChange={handleChange}
-            required
-          />
-        </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
-            <input
-              type="datetime-local"
-              className="form-control"
-              name="Exam_Valid_Upto"
-              value={examDetails.Exam_Valid_Upto}
-              onChange={handleChange}
-              required
-            />
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="number"
+                className="form-control"
+                name="No_of_Questions"
+                placeholder="Enter the number of questions"
+                value={examDetails.No_of_Questions}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="number"
+                className="form-control"
+                name="Exam_Duration"
+                placeholder="Enter the exam duration in minutes"
+                value={examDetails.Exam_Duration}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Question Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="number"
+                className="form-control"
+                name="Question_Duration"
+                placeholder="Enter the question duration in minutes"
+                value={examDetails.Question_Duration}
+                readOnly
+                required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="datetime-local"
+                className="form-control"
+                name="Exam_Valid_Upto"
+                value={examDetails.Exam_Valid_Upto}
+                onChange={handleChange}
+                required
+              />
+            </div>
           </div>
         </div>
-      </div>
-      <div className="text-center">
-        <button type="submit" className="btn btn-primary">Submit</button>
-      </div>
-    </form>
+        <div className="text-center">
+          <button type="submit" className="btn btn-primary">Submit</button>
+        </div>
+      </form>
 
       <Modal show={showModal} onHide={() => setShowModal(false)} backdrop="static" size="lg">
         <Modal.Header>

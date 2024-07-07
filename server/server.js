@@ -61,7 +61,7 @@ const License = mongoose.model('License', LicenseSchema);
 const ExamMasterSchema = new mongoose.Schema({
   Exam_Id: { type: Number, unique: true },
   Exam_Desc: { type: String, required: true },
-  Difficulty_Level: { type: Number, required: true, min: 0, max: 99 },
+  Difficulty_Level: { type: String, required: true },
   Subject: { type: String, required: true },
   Exam_Category: { type: String, required: true },
   No_of_Questions: { type: Number, required: true, min: 0, max: 9999 },

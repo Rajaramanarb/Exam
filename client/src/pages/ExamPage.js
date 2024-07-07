@@ -20,10 +20,11 @@ const ExamPage = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [questionTimesLeft, setQuestionTimesLeft] = useState([]);
   const [answers, setAnswers] = useState([]);
-  const [correctAnswers, setCorrectAnswers] = useState([]);
+  const [correctAnswers, setCorrectAnswers] = useState({});
   const [originalQuestionsOrder, setOriginalQuestionsOrder] = useState([]);
   const [score, setScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
+  const [examDetails, setExamDetails] = useState({}); // Add this line
 
   const apiUrl = process.env.NODE_ENV === 'production' 
     ? process.env.REACT_APP_API_URL_PRODUCTION
@@ -34,25 +35,27 @@ const ExamPage = () => {
       try {
         const response = await axios.get(`http://localhost:9000/exams/${examId}`);
         const exam = response.data;
+        setExamDetails(exam); // Store exam details
         setExamDuration(exam.Exam_Duration);
         setQuestionDuration(exam.Question_Duration);
-  
+
         const noOfQuestions = exam.No_of_Questions;
         setQuestionTimesLeft(new Array(noOfQuestions).fill(exam.Question_Duration * 60));
         setAnswers(new Array(noOfQuestions).fill(null));
-  
+
         let allQuestions = [];
-        let allCorrectAnswers = [];
+        let allCorrectAnswers = {};
         let originalOrder = [];
+
         for (let i = 0; i < noOfQuestions; i++) {
           const questionResponse = await axios.get(`http://localhost:9000/questions/${examId}/${i}`);
           const questionData = questionResponse.data;
           questionData.Question_ID = Number(questionData.Question_ID);
           allQuestions.push(questionData);
-          allCorrectAnswers.push(questionData.Correct_Answer - 1);
+          allCorrectAnswers[questionData.Question_ID] = questionData.Correct_Answer - 1;
           originalOrder.push(questionData.Question_ID);
         }
-  
+
         allQuestions = allQuestions.sort(() => Math.random() - 0.5);
         setQuestions(allQuestions);
         setCorrectAnswers(allCorrectAnswers);
@@ -63,9 +66,9 @@ const ExamPage = () => {
         toast.error('Error fetching exam details');
       }
     };
-  
+
     fetchExamDetails();
-  }, [examId]);
+  }, [examId, apiUrl]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -109,7 +112,8 @@ const ExamPage = () => {
   const finishExam = async () => {
     let newScore = 0;
     answers.forEach((answer, index) => {
-      if (answer === correctAnswers[questions[index].Question_ID - 1]) {
+      const questionId = questions[index].Question_ID;
+      if (answer === correctAnswers[questionId]) {
         newScore += 1;
       }
     });
@@ -126,8 +130,8 @@ const ExamPage = () => {
         return {
           Question_Id: questionId,
           Selected_Option: answers[originalIndex] !== null ? answers[originalIndex] + 1 : 0,
-          Correct_Answer: correctAnswers[questionId - 1] + 1,
-          Is_Correct: answers[originalIndex] === correctAnswers[questionId - 1]
+          Correct_Answer: correctAnswers[questionId] + 1,
+          Is_Correct: answers[originalIndex] === correctAnswers[questionId]
         };
       })
     };
@@ -173,17 +177,27 @@ const ExamPage = () => {
         </Nav>
       </Navbar>
       <h2 className="text-center">Exam</h2>
-      <Modal show={showStartModal} onHide={() => setShowStartModal(false)}>
+      <Modal show={showStartModal} onHide={() => setShowStartModal(false)}  backdrop="static">
         <Modal.Header>
           <Modal.Title>Start Exam</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you ready to start the exam?</Modal.Body>
+        <Modal.Body>
+          <p><strong>Exam Description:</strong> {examDetails.Exam_Desc}</p>
+          <p><strong>Subject:</strong> {examDetails.Subject}</p>
+          <p><strong>Author Name:</strong> {examDetails.Author_Name}</p>
+          <p><strong>Exam Category:</strong> {examDetails.Exam_Category}</p>
+          <p><strong>Difficulty Level:</strong> {examDetails.Difficulty_Level}</p>
+          <p><strong>Number of Questions:</strong> {examDetails.No_of_Questions}</p>
+          <p><strong>Exam Duration:</strong> {examDetails.Exam_Duration} minutes</p>
+          <p><strong>Question Duration:</strong> {examDetails.Question_Duration} minutes</p>
+          <b>Are you ready to start the exam?</b>
+        </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => navigate('/')}>Cancel</Button>
+          <Button variant="secondary" onClick={() => navigate('/TakeExam')}>Cancel</Button>
           <Button variant="primary" onClick={handleStartExam}>Start Exam</Button>
         </Modal.Footer>
       </Modal>
-      {currentQuestion ? (
+      {!showStartModal && currentQuestion ? (
         <div className="card mt-4">
           <div className="card-body">
             <div className="d-flex justify-content-between mb-3">
@@ -211,7 +225,7 @@ const ExamPage = () => {
             </div>
             <div className="d-flex justify-content-between mt-4">
               {currentQuestionIndex > 0 && (
-                <Button variant="primary" onClick={() => navigateToQuestion(currentQuestionIndex - 1)}>
+                <Button variant="secondary" onClick={() => navigateToQuestion(currentQuestionIndex - 1)}>
                   Previous
                 </Button>
               )}
@@ -220,7 +234,7 @@ const ExamPage = () => {
                   Next
                 </Button>
               ) : (
-                <Button variant="success" onClick={finishExam}>
+                <Button variant="danger" onClick={finishExam}>
                   Finish Exam
                 </Button>
               )}
@@ -230,7 +244,7 @@ const ExamPage = () => {
       ) : (
         <div>Loading question...</div>
       )}
-      <Modal show={showScoreModal} onHide={() => setShowScoreModal(false)}>
+      <Modal show={showScoreModal} onHide={() => setShowScoreModal(false)} backdrop="static">
         <Modal.Header>
           <Modal.Title>Exam Finished</Modal.Title>
         </Modal.Header>
