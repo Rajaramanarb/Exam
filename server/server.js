@@ -107,7 +107,8 @@ const ExamResultSchema = new mongoose.Schema({
       Correct_Answer: { type: Number, required: true },
       Is_Correct: { type: Boolean, required: true }
     }
-  ]
+  ],
+  Rating: { type: Number, default: 0 }
 });
 
 const Exam_Result = mongoose.model('Exam_Result', ExamResultSchema);
@@ -250,6 +251,20 @@ router.get('/exam-results/:authorId', async (req, res) => {
     const { authorId } = req.params;
     const results = await Exam_Result.find({ Author_Id: authorId });
     res.json(results);
+  } catch (error) {
+    console.error('Error fetching exam results:', error);
+    res.status(500).send('Error fetching exam results');
+  }
+});
+
+router.get('/rating/:examId', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const result = await Exam_Result.aggregate([
+      { $match: { Exam_Id: Number(examId) } },
+      { $group: { _id: '$Exam_Id', averageRating: { $avg: '$Rating' } } }
+    ]);
+    res.json(result);
   } catch (error) {
     console.error('Error fetching exam results:', error);
     res.status(500).send('Error fetching exam results');
