@@ -6,7 +6,6 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Button } from 'react-bootstrap';
 import { useUser } from "@clerk/clerk-react";
-import Alert from 'react-bootstrap/Alert';
 
 const ExamForm = () => {
   const { user } = useUser();
@@ -144,7 +143,31 @@ const ExamForm = () => {
   };
 
   return (
-    <div className="container mt-5">
+  <div>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/">Home</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/TakeExam">Take Exam</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/HostedExam">My Exam <span class="sr-only">(current)</span></a>
+            </li>
+          </ul>
+
+          <div class="collapse navbar-collapse justify-content-end">
+            <span class="navbar-text">
+              Welcome, {user?.firstName || 'Guest'} 
+            </span>
+          </div>
+        </div>
+      </nav>
+    <div className="container">
       <center><h2>Exam Form</h2></center>
       <form onSubmit={handleExamSubmit} className="p-4 border rounded shadow-sm">
         <div className="row">
@@ -267,7 +290,7 @@ const ExamForm = () => {
           <form>
             <div className="mb-3">
               <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
-              <input
+              <textarea
                 type="text"
                 className="form-control"
                 name="Question"
@@ -358,6 +381,7 @@ const ExamForm = () => {
         </Modal.Footer>
       </Modal>
     </div>
+  </div>
   );
 };
 

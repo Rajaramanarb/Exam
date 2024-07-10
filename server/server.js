@@ -82,6 +82,7 @@ const Exam_Master = mongoose.model('Exam_Master', ExamMasterSchema);
 
 const QuestionMasterSchema = new mongoose.Schema({
   Exam_ID: { type: Number, required: true, ref: 'Exam_Master' },
+  Author_Id: { type: String, required: true },
   Question_ID: { type: Number, unique: true },
   Question: { type: String, required: true },
   Answer_1: { type: String, required: true },
@@ -219,6 +220,64 @@ router.put('/questions/:examId/:index', async (req, res) => {
   }
 });
 
+router.get('/questions/:examId', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const question = await Question_Master.find({ Exam_ID: examId });
+    res.json(question);
+  } catch (error) {
+    console.error('Error fetching question:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/author-questions/:authorId', async (req, res) => {
+  try {
+    const { authorId } = req.params;
+    const question = await Question_Master.find({ Author_ID: authorId });
+    res.json(question);
+  } catch (error) {
+    console.error('Error fetching question:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.put('/questions/:questionId', async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const questionData = req.body;
+
+    const updatedQuestion = await Question_Master.findOneAndUpdate({ Question_ID : questionId }, questionData, { new: true });
+
+    if (!updatedQuestion) {
+      return res.status(404).send({ message: 'Question not found' });
+    }
+
+    res.status(200).send({ message: 'Question updated successfully', question: updatedQuestion });
+  } catch (error) {
+    console.error('Error updating question:', error);
+    res.status(500).send({ message: 'Failed to update question' });
+  }
+});
+
+router.put('/exams/:examId', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const examData = req.body;
+    
+    const updatedExam = await Exam_Master.findOneAndUpdate({ Exam_Id: examId }, examData, { new: true });
+
+    if (!updatedExam) {
+      return res.status(404).send({ message: 'Exam not found' });
+    }
+
+    res.status(200).send({ message: 'Exam updated successfully', exam: updatedExam });
+  } catch (error) {
+    console.error('Error updating exam:', error);
+    res.status(500).send({ message: 'Failed to update exam' });
+  }
+});
+
 router.get('/exams/:examId', async (req, res) => {
   try {
     const { examId } = req.params;
@@ -257,6 +316,17 @@ router.get('/exam-results/:authorId', async (req, res) => {
   }
 });
 
+router.get('/examresults/:examId', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const results = await Exam_Result.findOne({ Exam_Id: examId });
+    res.json(results);
+  } catch (error) {
+    console.error('Error fetching exam results:', error);
+    res.status(500).send('Error fetching exam results');
+  }
+});
+
 router.get('/rating/:examId', async (req, res) => {
   try {
     const { examId } = req.params;
@@ -268,6 +338,22 @@ router.get('/rating/:examId', async (req, res) => {
   } catch (error) {
     console.error('Error fetching exam results:', error);
     res.status(500).send('Error fetching exam results');
+  }
+});
+
+router.get('/hosted-exams/:authorId', async (req, res) => {
+  try {
+    const { authorId } = req.params;
+    const exams = await Exam_Master.find({ Author_Id: authorId });
+
+    if (!exams) {
+      return res.status(404).json({ error: 'No exams found for this user' });
+    }
+
+    res.status(200).json(exams);
+  } catch (error) {
+    console.error('Error fetching exams:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
   }
 });
 

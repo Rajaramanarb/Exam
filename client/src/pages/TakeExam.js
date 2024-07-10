@@ -5,10 +5,13 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useNavigate } from 'react-router-dom';
 import { Button, Table } from 'react-bootstrap';
 import moment from 'moment';
+import { useUser } from '@clerk/clerk-react';
 
 const TakeExam = () => {
+  const { user } = useUser();
   const [exams, setExams] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
+  const [ratings, setRatings] = useState({});
   const [authorName, setAuthorName] = useState('');
   const [subject, setSubject] = useState('');
   const [examCategory, setExamCategory] = useState('');
@@ -23,12 +26,11 @@ const TakeExam = () => {
     const fetchExams = async () => {
       try {
         const response = await axios.get(`http://localhost:9000/exams`);
-        console.log('API Response:', response);
-    
         if (Array.isArray(response.data)) {
           const validExams = response.data.filter(exam => moment().isBefore(moment(exam.Exam_Valid_Upto, "YYYY-MM-DD hh:mm A")));
           setExams(validExams);
           setFilteredExams(validExams);
+          fetchRatings(validExams);
         } else {
           console.error('Expected an array but received:', response.data);
           toast.error('Unexpected data format');
@@ -37,10 +39,26 @@ const TakeExam = () => {
         console.error('Error retrieving exams:', error);
         toast.error('Error retrieving exams');
       }
-    };    
+    };
+
+    const fetchRatings = async (exams) => {
+      try {
+        const ratingsData = {};
+        for (const exam of exams) {
+          const ratingResponse = await axios.get(`http://localhost:9000/rating/${exam.Exam_Id}`);
+          if (ratingResponse.data.length > 0) {
+            ratingsData[exam.Exam_Id] = ratingResponse.data[0].averageRating;
+          }
+        }
+        setRatings(ratingsData);
+      } catch (error) {
+        console.error('Error retrieving ratings:', error);
+        toast.error('Error retrieving ratings');
+      }
+    };
 
     fetchExams();
-  }, []);
+  }, [apiUrl]);
 
   useEffect(() => {
     filterExams();
@@ -71,7 +89,31 @@ const TakeExam = () => {
   };
 
   return (
-    <div className="container mt-5">
+   <div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="/">Home</a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/ExamForm">Host Exam</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/HostedExam">My Exam <span class="sr-only">(current)</span></a>
+            </li>
+          </ul>
+
+          <div class="collapse navbar-collapse justify-content-end">
+            <span class="navbar-text">
+              Welcome, {user?.firstName || 'Guest'} 
+            </span>
+          </div>
+        </div>
+      </nav>
+    <div className="container">
       <h2>Available Exams</h2>
       <div className="d-flex justify-content-between mb-3">
         <div className="flex-fill me-2">
@@ -114,14 +156,15 @@ const TakeExam = () => {
           </select>
         </div>
       </div>
-      <Table class="table table-hover">
-        <thead class="thead-dark">
+      <Table className="table table-hover">
+        <thead className="thead-dark">
           <tr>
             <th>Exam ID</th>
             <th>Description</th>
             <th>Subject</th>
             <th>Author</th>
-            <th>Difficulty Level</th>
+            <th>Rating</th>
+            <th>Difficulty Level</th>            
             <th>Actions</th>
           </tr>
         </thead>
@@ -133,19 +176,20 @@ const TakeExam = () => {
                 <td>{exam.Exam_Desc}</td>
                 <td>{exam.Subject}</td>
                 <td>{exam.Author_Name}</td>
+                <td>{ratings[exam.Exam_Id]?.toFixed(1) || 'N/A'} of 5</td>
                 <td>
-          <span className={`text fw-bold ${
-            exam.Difficulty_Level === 'Easy'
-              ? 'text-success'
-              : exam.Difficulty_Level === 'Medium'
-              ? 'text-warning'
-              : exam.Difficulty_Level === 'Hard'
-              ? 'text-danger'
-              : ''
-          }`}>
-            {exam.Difficulty_Level}
-          </span>
-        </td>
+                  <span className={`text fw-bold ${
+                    exam.Difficulty_Level === 'Easy'
+                      ? 'text-success'
+                      : exam.Difficulty_Level === 'Medium'
+                      ? 'text-warning'
+                      : exam.Difficulty_Level === 'Hard'
+                      ? 'text-danger'
+                      : ''
+                  }`}>
+                    {exam.Difficulty_Level}
+                  </span>
+                </td>
                 <td>
                   <Button
                     variant="primary"
@@ -158,12 +202,13 @@ const TakeExam = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="6" className="text-center">No exams available.</td>
+              <td colSpan="7" className="text-center">No exams available.</td>
             </tr>
           )}
         </tbody>
       </Table>
     </div>
+  </div>
   );
 };
 

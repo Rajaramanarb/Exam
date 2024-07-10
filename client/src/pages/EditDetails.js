@@ -6,8 +6,10 @@ import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useUser } from '@clerk/clerk-react';
 
 const EditDetails = () => {
+  const { user } = useUser();
   const { examId } = useParams();
   const navigate = useNavigate();
   const [examDetails, setExamDetails] = useState({});
@@ -15,6 +17,8 @@ const EditDetails = () => {
   const [showModal, setShowModal] = useState(false);
   const [questionDetails, setQuestionDetails] = useState({});
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [authoredQuestions, setAuthoredQuestions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchExamDetails = async () => {
@@ -35,9 +39,24 @@ const EditDetails = () => {
       }
     };
 
-    fetchExamDetails();
-    fetchQuestions();
-  }, [examId]);
+    const fetchAuthoredQuestions = async () => {
+      try {
+        if (user && user.id) {
+          const response = await axios.get(`http://localhost:9000/author-questions/${user.id}`);
+          setAuthoredQuestions(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching authored questions:', error);
+      }
+    };
+
+    if (user) {
+      fetchExamDetails();
+      fetchQuestions();
+      fetchAuthoredQuestions();
+      setLoading(false);
+    }
+  }, [examId, user]);
 
   const handleExamChange = (e) => {
     const { name, value } = e.target;
@@ -47,6 +66,14 @@ const EditDetails = () => {
   const handleQuestionChange = (e) => {
     const { name, value } = e.target;
     setQuestionDetails({ ...questionDetails, [name]: value });
+  };
+
+  const handleAuthoredQuestionSelect = (e) => {
+    const selectedQuestionId = e.target.value;
+    const selectedQuestion = authoredQuestions.find(question => question.Question_ID === parseInt(selectedQuestionId));
+    if (selectedQuestion) {
+      setQuestionDetails(selectedQuestion);
+    }
   };
 
   const handleQuestionEdit = (index) => {
@@ -277,6 +304,17 @@ const EditDetails = () => {
         <Modal.Body>
           <form>
             <div className="mb-3">
+              <label className="form-label fw-bold">Your Question</label>
+              <select className="form-control" onChange={handleAuthoredQuestionSelect}>
+                <option value="">Select a question</option>
+                {authoredQuestions.map((q) => (
+                  <option key={q.Question_ID} value={q.Question_ID}>
+                    {q.Question}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="mb-3">
               <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <textarea
                 className="form-control"
@@ -364,9 +402,11 @@ const EditDetails = () => {
               Previous
             </Button>
           )}
-          <Button variant="primary" onClick={handleQuestionNext} disabled={questionIndex === questions.length - 1}>
+          {questionIndex === questions.length - 1 && (
+            <Button variant="primary" onClick={handleQuestionNext}>
             Next
           </Button>
+          )}
           <Button variant="success" onClick={handleQuestionSave}>
             Save
           </Button>

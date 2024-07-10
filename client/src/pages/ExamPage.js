@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button, Modal, Navbar, Nav } from 'react-bootstrap';
 import { useUser } from '@clerk/clerk-react';
+import Rating from 'react-rating-stars-component'; // Import the rating component
 import '../css/ExamPage.css';
 
 const ExamPage = () => {
@@ -24,7 +25,9 @@ const ExamPage = () => {
   const [originalQuestionsOrder, setOriginalQuestionsOrder] = useState([]);
   const [score, setScore] = useState(0);
   const [showScoreModal, setShowScoreModal] = useState(false);
-  const [examDetails, setExamDetails] = useState({}); // Add this line
+  const [examDetails, setExamDetails] = useState({});
+  const [rating, setRating] = useState(0); // State to handle the rating
+  const [examResultBuffer, setExamResultBuffer] = useState(null); // Buffer for exam results
 
   const apiUrl = process.env.NODE_ENV === 'production' 
     ? process.env.REACT_APP_API_URL_PRODUCTION
@@ -35,7 +38,7 @@ const ExamPage = () => {
       try {
         const response = await axios.get(`http://localhost:9000/exams/${examId}`);
         const exam = response.data;
-        setExamDetails(exam); // Store exam details
+        setExamDetails(exam);
         setExamDuration(exam.Exam_Duration);
         setQuestionDuration(exam.Question_Duration);
 
@@ -105,11 +108,11 @@ const ExamPage = () => {
       setCurrentQuestion(questions[currentQuestionIndex + 1]);
     } else {
       toast.success('You have completed the exam!');
-      finishExam();
+      endExam();
     }
   };
 
-  const finishExam = async () => {
+  const endExam = () => {
     let newScore = 0;
     answers.forEach((answer, index) => {
       const questionId = questions[index].Question_ID;
@@ -118,7 +121,6 @@ const ExamPage = () => {
       }
     });
     setScore(newScore);
-    setShowScoreModal(true);
 
     const examResult = {
       Exam_Id: examId,
@@ -136,9 +138,18 @@ const ExamPage = () => {
       })
     };
 
+    setExamResultBuffer(examResult);
+    setShowScoreModal(true);
+  };
+
+  const finishExam = async () => {
+    const examResult = { ...examResultBuffer, Rating: rating };
+
     try {
       await axios.post(`http://localhost:9000/exam-results`, examResult);
       toast.success('Exam results saved successfully!');
+      setShowScoreModal(false);
+      navigate('/');
     } catch (error) {
       console.error('Error saving exam results:', error);
       toast.error('Error saving exam results');
@@ -159,6 +170,10 @@ const ExamPage = () => {
   const navigateToQuestion = (index) => {
     setCurrentQuestionIndex(index);
     setCurrentQuestion(questions[index]);
+  };
+
+  const handleRatingChange = (newRating) => {
+    setRating(newRating);
   };
 
   return (
@@ -193,12 +208,12 @@ const ExamPage = () => {
           <b>Are you ready to start the exam?</b>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => navigate('/TakeExam')}>Cancel</Button>
-          <Button variant="primary" onClick={handleStartExam}>Start Exam</Button>
+          <Button variant="secondary" onClick={() => navigate('/TakeExam')}>No</Button>
+          <Button variant="primary" onClick={handleStartExam}>Yes</Button>
         </Modal.Footer>
       </Modal>
       {!showStartModal && currentQuestion ? (
-        <div className="card mt-4">
+        <div className="card shadow-sm">
           <div className="card-body">
             <div className="d-flex justify-content-between mb-3">
               <div>Time Left: {formatTime(timeLeft)}</div>
@@ -234,8 +249,8 @@ const ExamPage = () => {
                   Next
                 </Button>
               ) : (
-                <Button variant="danger" onClick={finishExam}>
-                  Finish Exam
+                <Button variant="danger" onClick={endExam}>
+                  End Exam
                 </Button>
               )}
             </div>
@@ -250,9 +265,20 @@ const ExamPage = () => {
         </Modal.Header>
         <Modal.Body>
           <h5>Your score is: {score} / {questions.length}</h5>
+          <div>
+            <h6>Rate the exam:</h6>
+            <Rating
+              count={5}
+              size={24}
+              activeColor="#ffd700"
+              value={rating}
+              onChange={handleRatingChange}
+            />
+            <p className="mt-2">Your Rating: {rating}</p>
+          </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={() => navigate('/')}>Close</Button>
+          <Button variant="primary" onClick={finishExam}>Finish Exam</Button>
         </Modal.Footer>
       </Modal>
     </div>

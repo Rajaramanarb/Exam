@@ -90,6 +90,14 @@ const HomePage = () => {
 
         {/* Right Sidebar */}
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
+          <ul className="list-group">
+            <SignedIn>
+              <li className="list-group-item"><Link to="/HostedExam">My Exams</Link></li>
+            </SignedIn>
+            <SignedOut>
+              <li className="list-group-item" onClick={() => alert('Please sign in to see my exams.')}>My Exams</li>
+            </SignedOut>
+          </ul>
           <div className="mt-3">
             <p>Ad Space</p>
           </div>
