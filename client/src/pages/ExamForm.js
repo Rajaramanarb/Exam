@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Alert } from 'react-bootstrap';
 import { useUser } from "@clerk/clerk-react";
 
 const ExamForm = () => {
@@ -21,9 +21,13 @@ const ExamForm = () => {
     Question_Duration: '',
     Author_Name: '',
     Author_Id: '',
-    Exam_Valid_Upto: ''
+    Exam_Valid_Upto: '',
+    Questions_To_Attend: '',
+    Publish_Date: ''
   });
 
+  const [authoredQuestions, setAuthoredQuestions] = useState([]);
+  const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [questions, setQuestions] = useState([]);
   const [questionIndex, setQuestionIndex] = useState(0);
@@ -36,7 +40,17 @@ const ExamForm = () => {
     Correct_Answer: ''
   });
 
-  // Set Author_Id and Author_Name when user data is available
+  const fetchAuthoredQuestions = async () => {
+    try {
+      if (user && user.id) {
+        const response = await axios.get(`http://localhost:9000/author-questions/${user.id}`);
+        setAuthoredQuestions(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching authored questions:', error);
+    }
+  };
+
   useEffect(() => {
     if (user) {
       setExamDetails((prevDetails) => ({
@@ -47,17 +61,37 @@ const ExamForm = () => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (examDetails.No_of_Questions) {
+      setExamDetails((prevDetails) => ({
+        ...prevDetails,
+        Questions_To_Attend: prevDetails.No_of_Questions
+      }));
+    }
+  }, [examDetails.No_of_Questions]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let errorMessage = '';
+    if (name === 'Questions_To_Attend') {
+      const numValue = Number(value);
+      if (numValue > examDetails.No_of_Questions) {
+        errorMessage = 'Questions to attend cannot be more than the total number of questions.';
+      } else if (numValue < 1) {
+        errorMessage = 'Questions to attend cannot be less than 1.';
+      }
+    }
+
     setExamDetails({
       ...examDetails,
       [name]: value,
     });
+    setError(errorMessage);
   };
 
   useEffect(() => {
     if (examDetails.Exam_Duration && examDetails.No_of_Questions) {
-      const questionDuration = (examDetails.Exam_Duration / examDetails.No_of_Questions).toFixed(1);
+      const questionDuration = (examDetails.Exam_Duration / examDetails.Questions_To_Attend).toFixed(1);
       setExamDetails((prevDetails) => ({
         ...prevDetails,
         Question_Duration: questionDuration
@@ -71,6 +105,14 @@ const ExamForm = () => {
       ...questionDetails,
       [name]: value,
     });
+  };
+
+  const handleAuthoredQuestionSelect = (e) => {
+    const selectedQuestionId = e.target.value;
+    const selectedQuestion = authoredQuestions.find(question => question.Question_ID === parseInt(selectedQuestionId));
+    if (selectedQuestion) {
+      setQuestionDetails(selectedQuestion);
+    }
   };
 
   const handleExamSubmit = async (e) => {
@@ -119,20 +161,33 @@ const ExamForm = () => {
     try {
       const examData = {
         ...examDetails,
-        Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')
+        Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A'),
+        Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
 
       const examResponse = await axios.post(`http://localhost:9000/exams`, examData);
       const examId = examResponse.data.Exam_Id;
 
       for (let i = 0; i < questionsToSave.length; i++) {
-        const questionData = {
-          Exam_ID: examId,
-          ...questionsToSave[i],
-          Correct_Answer: parseInt(questionsToSave[i].Correct_Answer) // Ensure Correct_Answer is a number
-        };
-        await axios.post(`http://localhost:9000/questions`, questionData);
-      }
+        if (questions[i].Question_ID) {
+          // Check if the question already exists and is just being added to the exam
+          const questionExists = authoredQuestions.find(q => q.Question_ID === questions[i].Question_ID);
+            // If the question already exists, update its Exam_ID field
+            const updatedQuestion = {
+              ...questions[i],
+              Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])] // Ensure unique Exam_IDs
+            };
+            await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, updatedQuestion);
+          } else {
+            const questionData = {
+              Exam_ID: examId,
+              Author_Id: user.id,
+              ...questionsToSave[i],
+              Correct_Answer: parseInt(questionsToSave[i].Correct_Answer)
+            };
+            await axios.post(`http://localhost:9000/questions`, questionData);
+          }
+        }
 
       toast.success('Exam and all questions saved successfully');
       navigate('/');
@@ -183,22 +238,7 @@ const ExamForm = () => {
                 onChange={handleChange}
                 required
               />
-            </div>
-            <div className="mb-3">
-              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
-              <select
-                className="form-control"
-                name="Difficulty_Level"
-                value={examDetails.Difficulty_Level}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select Difficulty Level</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-              </select>
-            </div>
+            </div>            
             <div className="mb-3">
               <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
               <input
@@ -226,20 +266,6 @@ const ExamForm = () => {
                 <option value="Others">Others</option>
               </select>
             </div>
-          </div>
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
-              <input
-                type="number"
-                className="form-control"
-                name="No_of_Questions"
-                placeholder="Enter the number of questions"
-                value={examDetails.No_of_Questions}
-                onChange={handleChange}
-                required
-              />
-            </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
               <input
@@ -264,6 +290,48 @@ const ExamForm = () => {
                 required
               />
             </div>
+          </div>
+          <div className="col-md-6">
+            <div className="mb-3">
+              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+              <select
+                className="form-control"
+                name="Difficulty_Level"
+                value={examDetails.Difficulty_Level}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Select Difficulty Level</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="number"
+                className="form-control"
+                name="No_of_Questions"
+                placeholder="Enter the number of questions"
+                value={examDetails.No_of_Questions}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+                <label className="form-label fw-bold">Questions To Attend<span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="Questions_To_Attend"
+                  placeholder="Enter number of questions to attend"
+                  value={examDetails.Questions_To_Attend}
+                  onChange={handleChange}
+                  required
+                />
+                {error && <Alert variant="danger">{error}</Alert>}
+            </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
               <input
@@ -274,6 +342,17 @@ const ExamForm = () => {
                 onChange={handleChange}
                 required
               />
+            </div>
+            <div className="mb-3">
+                <label className="form-label fw-bold">Publish Date<span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="datetime-local"
+                  className="form-control"
+                  name="Publish_Date"
+                  value={examDetails.Publish_Date}
+                  onChange={handleChange}
+                  required
+                />
             </div>
           </div>
         </div>
@@ -288,6 +367,17 @@ const ExamForm = () => {
         </Modal.Header>
         <Modal.Body>
           <form>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Your Question</label>
+              <select className="form-control" onChange={handleAuthoredQuestionSelect}>
+                <option value="">Select a question</option>
+                {authoredQuestions.map((q) => (
+                  <option key={q.Question_ID} value={q.Question_ID}>
+                    {q.Question}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <textarea
