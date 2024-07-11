@@ -27,7 +27,13 @@ const TakeExam = () => {
       try {
         const response = await axios.get(`http://localhost:9000/exams`);
         if (Array.isArray(response.data)) {
-          const validExams = response.data.filter(exam => moment().isBefore(moment(exam.Exam_Valid_Upto, "YYYY-MM-DD hh:mm A")));
+          const validExams = response.data.filter(exam => {
+            const now = moment();
+            const validUpto = moment(exam.Exam_Valid_Upto, "YYYY-MM-DD hh:mm A");
+            const publishDate = moment(exam.Publish_Date, "YYYY-MM-DD hh:mm A");
+          
+            return now.isBefore(validUpto) && now.isAfter(publishDate);
+          });
           setExams(validExams);
           setFilteredExams(validExams);
           fetchRatings(validExams);
