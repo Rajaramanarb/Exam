@@ -40,16 +40,22 @@ const ExamForm = () => {
     Correct_Answer: ''
   });
 
-  const fetchAuthoredQuestions = async () => {
-    try {
-      if (user && user.id) {
-        const response = await axios.get(`http://localhost:9000/author-questions/${user.id}`);
-        setAuthoredQuestions(response.data);
+  useEffect(() => {
+    const fetchAuthoredQuestions = async () => {
+      try {
+        if (user && user.id) {
+          const response = await axios.get(`http://localhost:9000/author-questions/${user.id}`);
+          setAuthoredQuestions(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching authored questions:', error);
       }
-    } catch (error) {
-      console.error('Error fetching authored questions:', error);
+    };
+
+    if (user) {
+      fetchAuthoredQuestions();
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -90,14 +96,14 @@ const ExamForm = () => {
   };
 
   useEffect(() => {
-    if (examDetails.Exam_Duration && examDetails.No_of_Questions) {
+    if (examDetails.Exam_Duration && examDetails.Questions_To_Attend) {
       const questionDuration = (examDetails.Exam_Duration / examDetails.Questions_To_Attend).toFixed(1);
       setExamDetails((prevDetails) => ({
         ...prevDetails,
         Question_Duration: questionDuration
       }));
     }
-  }, [examDetails.Exam_Duration, examDetails.No_of_Questions]);
+  }, [examDetails.Exam_Duration, examDetails.Questions_To_Attend]);
 
   const handleQuestionChange = (e) => {
     const { name, value } = e.target;
@@ -164,59 +170,72 @@ const ExamForm = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A'),
         Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
-
+  
+      console.log('Exam data to be saved:', examData); // Log exam data
+  
       const examResponse = await axios.post(`http://localhost:9000/exams`, examData);
       const examId = examResponse.data.Exam_Id;
-
+  
+      console.log('Exam saved successfully with ID:', examId); // Log successful exam save
+  
       for (let i = 0; i < questionsToSave.length; i++) {
-        if (questions[i].Question_ID) {
-          // Check if the question already exists and is just being added to the exam
-          const questionExists = authoredQuestions.find(q => q.Question_ID === questions[i].Question_ID);
-            // If the question already exists, update its Exam_ID field
+        console.log(`Processing question ${i + 1} of ${questionsToSave.length}`); // Log question processing
+  
+        if (questionsToSave[i].Question_ID) {
+          const questionExists = authoredQuestions.find(q => q.Question_ID === questionsToSave[i].Question_ID);
+  
+          if (questionExists) {
             const updatedQuestion = {
-              ...questions[i],
+              ...questionsToSave[i],
               Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])] // Ensure unique Exam_IDs
             };
-            await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, updatedQuestion);
-          } else {
-            const questionData = {
-              Exam_ID: examId,
-              Author_Id: user.id,
-              ...questionsToSave[i],
-              Correct_Answer: parseInt(questionsToSave[i].Correct_Answer)
-            };
-            await axios.post(`http://localhost:9000/questions`, questionData);
+  
+            console.log('Updating existing question:', updatedQuestion); // Log question update
+  
+            await axios.put(`http://localhost:9000/questions/${questionsToSave[i].Question_ID}`, updatedQuestion);
           }
+        } else {
+          const questionData = {
+            Exam_ID: examId,
+            Author_Id: user.id,
+            ...questionsToSave[i],
+            Correct_Answer: parseInt(questionsToSave[i].Correct_Answer)
+          };
+  
+          console.log('Saving new question:', questionData); // Log new question save
+  
+          await axios.post(`http://localhost:9000/questions`, questionData);
         }
-
+      }
+  
       toast.success('Exam and all questions saved successfully');
       navigate('/');
     } catch (error) {
-      console.error('Error saving exam or questions:', error);
+      console.error('Error details:', error.response ? error.response.data : error.message); // Log detailed error
       toast.error('Error saving exam or questions');
     }
-  };
+  };  
 
   return (
   <div>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="/">Home</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand" href="/">Home</a>
+          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
           </button>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="/TakeExam">Take Exam</a>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav mr-auto">
+            <li className="nav-item">
+              <a className="nav-link" href="/TakeExam">Take Exam</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/HostedExam">My Exam <span class="sr-only">(current)</span></a>
+            <li className="nav-item">
+              <a className="nav-link" href="/HostedExam">My Exam <span className="sr-only">(current)</span></a>
             </li>
           </ul>
 
-          <div class="collapse navbar-collapse justify-content-end">
-            <span class="navbar-text">
+          <div className="collapse navbar-collapse justify-content-end">
+            <span className="navbar-text">
               Welcome, {user?.firstName || 'Guest'} 
             </span>
           </div>
