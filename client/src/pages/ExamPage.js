@@ -41,15 +41,17 @@ const ExamPage = () => {
         setExamDetails(exam);
         setExamDuration(exam.Exam_Duration);
         setQuestionDuration(exam.Question_Duration);
-
-        const noOfQuestions = exam.No_of_Questions;
-        setQuestionTimesLeft(new Array(noOfQuestions).fill(exam.Question_Duration * 60));
-        setAnswers(new Array(noOfQuestions).fill(null));
-
+    
+        const noOfQuestions = exam.No_of_Questions;  // Total questions set by the author
+        const questionsToAttend = exam.Questions_To_Attend;  // Questions user needs to attend
+        setQuestionTimesLeft(new Array(questionsToAttend).fill(exam.Question_Duration * 60));
+        setAnswers(new Array(questionsToAttend).fill(null));
+    
         let allQuestions = [];
         let allCorrectAnswers = {};
         let originalOrder = [];
-
+    
+        // Fetch all questions set by the author
         for (let i = 0; i < noOfQuestions; i++) {
           const questionResponse = await axios.get(`http://localhost:9000/questions/${examId}/${i}`);
           const questionData = questionResponse.data;
@@ -58,20 +60,23 @@ const ExamPage = () => {
           allCorrectAnswers[questionData.Question_ID] = questionData.Correct_Answer - 1;
           originalOrder.push(questionData.Question_ID);
         }
-
+    
+        // Randomly select the required number of questions
         allQuestions = allQuestions.sort(() => Math.random() - 0.5);
-        setQuestions(allQuestions);
+        const selectedQuestions = allQuestions.slice(0, questionsToAttend);
+        
+        setQuestions(selectedQuestions);
         setCorrectAnswers(allCorrectAnswers);
         setOriginalQuestionsOrder(originalOrder);
-        setCurrentQuestion(allQuestions[0]);
+        setCurrentQuestion(selectedQuestions[0]);
       } catch (error) {
         console.error('Error fetching exam details:', error);
         toast.error('Error fetching exam details');
       }
     };
-
-    fetchExamDetails();
-  }, [examId, apiUrl]);
+    
+      fetchExamDetails();
+    }, [examId, apiUrl]);    
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -123,14 +128,14 @@ const ExamPage = () => {
     setScore(newScore);
 
     const examResult = {
-      Exam_Id: examId,
+      Exam_ID: examId,
       Author_Id: user.id,
       Author_Name: user.firstName,
       Score: newScore,
       Responses: originalQuestionsOrder.map((questionId, index) => {
         const originalIndex = questions.findIndex(q => q.Question_ID === questionId);
         return {
-          Question_Id: questionId,
+          Question_ID: questionId,
           Selected_Option: answers[originalIndex] !== null ? answers[originalIndex] + 1 : 0,
           Correct_Answer: correctAnswers[questionId] + 1,
           Is_Correct: answers[originalIndex] === correctAnswers[questionId]
@@ -202,7 +207,7 @@ const ExamPage = () => {
           <p><strong>Author Name:</strong> {examDetails.Author_Name}</p>
           <p><strong>Exam Category:</strong> {examDetails.Exam_Category}</p>
           <p><strong>Difficulty Level:</strong> {examDetails.Difficulty_Level}</p>
-          <p><strong>Number of Questions:</strong> {examDetails.No_of_Questions}</p>
+          <p><strong>Number of Questions:</strong> {examDetails.Questions_To_Attend}</p>
           <p><strong>Exam Duration:</strong> {examDetails.Exam_Duration} minutes</p>
           <p><strong>Question Duration:</strong> {examDetails.Question_Duration} minutes</p>
           <b>Are you ready to start the exam?</b>
