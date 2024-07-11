@@ -64,7 +64,8 @@ const ExamMasterSchema = new mongoose.Schema({
   Difficulty_Level: { type: String, required: true },
   Subject: { type: String, required: true },
   Exam_Category: { type: String, required: true },
-  No_of_Questions: { type: Number, required: true, min: 0, max: 9999 },
+  No_of_Questions: { type: Number, required: true, min: 1, max: 9999 },
+  Questions_To_Attend: { type: Number, required: true, min: 1, max: 9999 },
   Exam_Duration: { type: Number, required: true },
   Question_Duration: { type: Number, required: true },
   Author_Name: { type: String, required: true },
@@ -73,6 +74,7 @@ const ExamMasterSchema = new mongoose.Schema({
     type: String,
     default: () => moment().tz('Asia/Kolkata').format('YYYY-MM-DD hh:mm A')
   },
+  Publish_Date: { type: String, required: true },
   Exam_Valid_Upto: { type: String, required: true }
 });
 
@@ -81,7 +83,7 @@ ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });
 const Exam_Master = mongoose.model('Exam_Master', ExamMasterSchema);
 
 const QuestionMasterSchema = new mongoose.Schema({
-  Exam_ID: { type: Number, required: true, ref: 'Exam_Master' },
+  Exam_ID: { type: [Number], required: true, ref: 'Exam_Master' },
   Author_Id: { type: String, required: true },
   Question_ID: { type: Number, unique: true },
   Question: { type: String, required: true },
@@ -97,13 +99,13 @@ QuestionMasterSchema.plugin(AutoIncrement, { inc_field: 'Question_ID', start_seq
 const Question_Master = mongoose.model('Question_Master', QuestionMasterSchema);
 
 const ExamResultSchema = new mongoose.Schema({
-  Exam_Id: { type: Number, required: true, ref: 'Exam_Master' },
+  Exam_ID: { type: Number, required: true, ref: 'Exam_Master' },
   Author_Id: { type: String, required: true },
   Author_Name: { type: String, required: true },
   Score: { type: Number, required: true },
   Responses: [
     {
-      Question_Id: { type: Number, required: true, ref: 'Question_Master' },
+      Question_ID: { type: Number, required: true, ref: 'Question_Master' },
       Selected_Option: { type: Number, required: true },
       Correct_Answer: { type: Number, required: true },
       Is_Correct: { type: Boolean, required: true }
@@ -234,7 +236,7 @@ router.get('/questions/:examId', async (req, res) => {
 router.get('/author-questions/:authorId', async (req, res) => {
   try {
     const { authorId } = req.params;
-    const question = await Question_Master.find({ Author_ID: authorId });
+    const question = await Question_Master.find({ Author_Id: authorId });
     res.json(question);
   } catch (error) {
     console.error('Error fetching question:', error);
@@ -319,7 +321,7 @@ router.get('/exam-results/:authorId', async (req, res) => {
 router.get('/examresults/:examId', async (req, res) => {
   try {
     const { examId } = req.params;
-    const results = await Exam_Result.findOne({ Exam_Id: examId });
+    const results = await Exam_Result.findOne({ Exam_ID: examId });
     res.json(results);
   } catch (error) {
     console.error('Error fetching exam results:', error);
@@ -331,7 +333,7 @@ router.get('/rating/:examId', async (req, res) => {
   try {
     const { examId } = req.params;
     const result = await Exam_Result.aggregate([
-      { $match: { Exam_Id: Number(examId) } },
+      { $match: { Exam_ID: Number(examId) } },
       { $group: { _id: '$Exam_Id', averageRating: { $avg: '$Rating' } } }
     ]);
     res.json(result);
