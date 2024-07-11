@@ -4,12 +4,11 @@ import { useUser } from '@clerk/clerk-react';
 import { Table, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported
+import 'bootstrap/dist/css/bootstrap.min.css'; 
 
 const HostedExam = () => {
   const { user } = useUser();
   const [exams, setExams] = useState([]);
-  const [ratings, setRatings] = useState({});
   const [editableExams, setEditableExams] = useState({});
   const navigate = useNavigate();
 
@@ -18,25 +17,9 @@ const HostedExam = () => {
       try {
         const response = await axios.get(`http://localhost:9000/hosted-exams/${user.id}`);
         setExams(response.data);
-        fetchRatings(response.data);
         fetchEditStatus(response.data);
       } catch (error) {
         console.error('Error fetching exams:', error);
-      }
-    };
-
-    const fetchRatings = async (exams) => {
-      try {
-        const ratingsData = {};
-        for (const exam of exams) {
-          const ratingResponse = await axios.get(`http://localhost:9000/rating/${exam.Exam_Id}`);
-          if (ratingResponse.data.length > 0) {
-            ratingsData[exam.Exam_Id] = ratingResponse.data[0].averageRating;
-          }
-        }
-        setRatings(ratingsData);
-      } catch (error) {
-        console.error('Error retrieving ratings:', error);
       }
     };
 
@@ -96,9 +79,10 @@ const HostedExam = () => {
             <th>Exam ID</th>
             <th>Description</th>
             <th>Subject</th>
-            <th>Rating</th>
+            <th>Exam Category</th>
             <th>Difficulty Level</th>
             <th>Published On</th>
+            <th>Valid Upto</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -108,7 +92,7 @@ const HostedExam = () => {
               <td>{exam.Exam_Id}</td>
               <td>{exam.Exam_Desc}</td>
               <td>{exam.Subject}</td>
-              <td>{ratings[exam.Exam_Id]?.toFixed(1) || 'N/A'} of 5</td>
+              <td>{exam.Exam_Category}</td>
               <td>
                 <span className={`text fw-bold ${
                   exam.Difficulty_Level === 'Easy'
@@ -122,7 +106,12 @@ const HostedExam = () => {
                   {exam.Difficulty_Level}
                 </span>
               </td>
-              <td>{moment(exam.Audit_Details).format('YYYY-MM-DD hh:mm A')}</td>
+              <td>{moment(exam.Publish_Date).format('YYYY-MM-DD hh:mm A')}</td>
+              <td>
+                <span className={`text fw-bold ${moment().isAfter(moment(exam.Exam_Valid_Upto)) ? 'text-danger' : 'text-success'}`}>
+                  {moment(exam.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')}
+                </span>
+              </td>
               <td>
                 {editableExams[exam.Exam_Id] && (
                   <Button
