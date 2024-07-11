@@ -39,6 +39,7 @@ const ExamForm = () => {
     Answer_4: '',
     Correct_Answer: ''
   });
+  const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
   useEffect(() => {
     const fetchAuthoredQuestions = async () => {
@@ -115,9 +116,19 @@ const ExamForm = () => {
 
   const handleAuthoredQuestionSelect = (e) => {
     const selectedQuestionId = e.target.value;
+    setSelectedQuestionId(selectedQuestionId);
     const selectedQuestion = authoredQuestions.find(question => question.Question_ID === parseInt(selectedQuestionId));
     if (selectedQuestion) {
       setQuestionDetails(selectedQuestion);
+    } else {
+      setQuestionDetails({
+        Question: '',
+        Answer_1: '',
+        Answer_2: '',
+        Answer_3: '',
+        Answer_4: '',
+        Correct_Answer: ''
+      });
     }
   };
 
@@ -139,6 +150,7 @@ const ExamForm = () => {
       Answer_4: '',
       Correct_Answer: ''
     });
+    setSelectedQuestionId('');
 
     if (questionIndex + 1 === parseInt(examDetails.No_of_Questions)) {
       saveExamAndQuestions(updatedQuestions);
@@ -161,6 +173,7 @@ const ExamForm = () => {
     setQuestions(updatedQuestions);
     setQuestionIndex(questionIndex - 1);
     setQuestionDetails(updatedQuestions[questionIndex - 1]);
+    setSelectedQuestionId(updatedQuestions[questionIndex - 1].Question_ID || '');
   };
 
   const saveExamAndQuestions = async (questionsToSave) => {
@@ -388,7 +401,13 @@ const ExamForm = () => {
           <form>
             <div className="mb-3">
               <label className="form-label fw-bold">Your Question</label>
-              <select className="form-control" onChange={handleAuthoredQuestionSelect}>
+              <select
+                className="form-control"
+                id="authoredQuestions"
+                name="authoredQuestions"
+                value={selectedQuestionId}
+                onChange={handleAuthoredQuestionSelect}
+              >
                 <option value="">Select a question</option>
                 {authoredQuestions.map((q) => (
                   <option key={q.Question_ID} value={q.Question_ID}>
