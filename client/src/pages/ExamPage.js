@@ -49,7 +49,6 @@ const ExamPage = () => {
     
         let allQuestions = [];
         let allCorrectAnswers = {};
-        let originalOrder = [];
     
         // Fetch all questions set by the author
         for (let i = 0; i < noOfQuestions; i++) {
@@ -58,16 +57,16 @@ const ExamPage = () => {
           questionData.Question_ID = Number(questionData.Question_ID);
           allQuestions.push(questionData);
           allCorrectAnswers[questionData.Question_ID] = questionData.Correct_Answer - 1;
-          originalOrder.push(questionData.Question_ID);
         }
     
         // Randomly select the required number of questions
         allQuestions = allQuestions.sort(() => Math.random() - 0.5);
         const selectedQuestions = allQuestions.slice(0, questionsToAttend);
+        const selectedOrder = selectedQuestions.map(q => q.Question_ID);
         
         setQuestions(selectedQuestions);
         setCorrectAnswers(allCorrectAnswers);
-        setOriginalQuestionsOrder(originalOrder);
+        setOriginalQuestionsOrder(selectedOrder);
         setCurrentQuestion(selectedQuestions[0]);
       } catch (error) {
         console.error('Error fetching exam details:', error);
@@ -75,8 +74,8 @@ const ExamPage = () => {
       }
     };
     
-      fetchExamDetails();
-    }, [examId, apiUrl]);    
+    fetchExamDetails();
+  }, [examId, apiUrl]);    
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -132,13 +131,12 @@ const ExamPage = () => {
       Author_Id: user.id,
       Author_Name: user.firstName,
       Score: newScore,
-      Responses: originalQuestionsOrder.map((questionId, index) => {
-        const originalIndex = questions.findIndex(q => q.Question_ID === questionId);
+      Responses: questions.map((question, index) => {
         return {
-          Question_ID: questionId,
-          Selected_Option: answers[originalIndex] !== null ? answers[originalIndex] + 1 : 0,
-          Correct_Answer: correctAnswers[questionId] + 1,
-          Is_Correct: answers[originalIndex] === correctAnswers[questionId]
+          Question_ID: question.Question_ID,
+          Selected_Option: answers[index] !== null ? answers[index] + 1 : 0,
+          Correct_Answer: correctAnswers[question.Question_ID] + 1,
+          Is_Correct: answers[index] === correctAnswers[question.Question_ID]
         };
       })
     };
