@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Table, Button, Modal } from 'react-bootstrap';
+import { Table, Button, Modal, Alert } from 'react-bootstrap';
 import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { toast } from 'react-toastify';
@@ -18,7 +18,8 @@ const EditDetails = () => {
   const [questionDetails, setQuestionDetails] = useState({});
   const [questionIndex, setQuestionIndex] = useState(0);
   const [authoredQuestions, setAuthoredQuestions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
   useEffect(() => {
     const fetchExamDetails = async () => {
@@ -26,6 +27,7 @@ const EditDetails = () => {
         const response = await axios.get(`http://localhost:9000/exams/${examId}`);
         setExamDetails(response.data);
       } catch (error) {
+        toast.error('Error fetching exam details:');
         console.error('Error fetching exam details:', error);
       }
     };
@@ -35,6 +37,7 @@ const EditDetails = () => {
         const response = await axios.get(`http://localhost:9000/questions/${examId}`);
         setQuestions(response.data);
       } catch (error) {
+        toast.error('Error fetching questions');
         console.error('Error fetching questions:', error);
       }
     };
@@ -46,6 +49,7 @@ const EditDetails = () => {
           setAuthoredQuestions(response.data);
         }
       } catch (error) {
+        //toast.error('Error fetching authored questions');
         console.error('Error fetching authored questions:', error);
       }
     };
@@ -54,13 +58,32 @@ const EditDetails = () => {
       fetchExamDetails();
       fetchQuestions();
       fetchAuthoredQuestions();
-      setLoading(false);
     }
   }, [examId, user]);
 
+  useEffect(() => {
+    if (examDetails.No_of_Questions) {
+      setExamDetails((prevDetails) => ({
+        ...prevDetails,
+        Questions_To_Attend: prevDetails.No_of_Questions
+      }));
+    }
+  }, [examDetails.No_of_Questions]);
+
   const handleExamChange = (e) => {
     const { name, value } = e.target;
+    let errorMessage = '';
+    if (name === 'Questions_To_Attend') {
+      const numValue = Number(value);
+      if (numValue > examDetails.No_of_Questions) {
+        errorMessage = 'Questions to attend cannot be more than the total number of questions.';
+      } else if (numValue < 1) {
+        errorMessage = 'Questions to attend cannot be less than 1.';
+      }
+    }
+
     setExamDetails({ ...examDetails, [name]: value });
+    setError(errorMessage);
   };
 
   const handleQuestionChange = (e) => {
@@ -70,9 +93,19 @@ const EditDetails = () => {
 
   const handleAuthoredQuestionSelect = (e) => {
     const selectedQuestionId = e.target.value;
+    setSelectedQuestionId(selectedQuestionId);
     const selectedQuestion = authoredQuestions.find(question => question.Question_ID === parseInt(selectedQuestionId));
     if (selectedQuestion) {
       setQuestionDetails(selectedQuestion);
+    } else {
+      setQuestionDetails({
+        Question: '',
+        Answer_1: '',
+        Answer_2: '',
+        Answer_3: '',
+        Answer_4: '',
+        Correct_Answer: ''
+      });
     }
   };
 
@@ -104,28 +137,56 @@ const EditDetails = () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
     setQuestions(updatedQuestions);
+    setQuestionDetails({
+      Question: '',
+      Answer_1: '',
+      Answer_2: '',
+      Answer_3: '',
+      Answer_4: '',
+      Correct_Answer: ''
+    });
+    setSelectedQuestionId('');
     setShowModal(false);
   };
 
   const handleExamSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:9000/exams/${examId}`, examDetails);
+      const examData = {
+        ...examDetails,
+        Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A'),
+        Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
+      };
+      await axios.put(`http://localhost:9000/exams/${examId}`, examData);
       for (let i = 0; i < questions.length; i++) {
         if (questions[i].Question_ID) {
-          await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, questions[i]);
+          // Check if the question already exists and is just being added to the exam
+          const questionExists = authoredQuestions.find(q => q.Question_ID === questions[i].Question_ID);
+          if (questionExists) {
+            // If the question already exists, update its Exam_ID field
+            const updatedQuestion = {
+              ...questions[i],
+              Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])] // Ensure unique Exam_IDs
+            };
+            await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, updatedQuestion);
+          } else {
+            // Otherwise, update the question normally
+            await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, questions[i]);
+          }
         } else {
           const questionData = {
-            Exam_ID: examId,
+            Exam_ID: [examId],
+            Author_Id: user.id,
             ...questions[i],
             Correct_Answer: parseInt(questions[i].Correct_Answer)
           };
           await axios.post(`http://localhost:9000/questions`, questionData);
         }
       }
-      alert('Exam and questions updated successfully');
+      toast.success('Exam and questions updated successfully');
       navigate('/');
     } catch (error) {
+      toast.error('Error updating exam and questions');
       console.error('Error updating exam and questions:', error);
     }
   };
@@ -133,9 +194,9 @@ const EditDetails = () => {
   useEffect(() => {
     setExamDetails(prevDetails => ({
       ...prevDetails,
-      Question_Duration: (prevDetails.Exam_Duration / prevDetails.No_of_Questions).toFixed(1),
+      Question_Duration: (prevDetails.Exam_Duration / prevDetails.Questions_To_Attend).toFixed(1),
     }));
-  }, [examDetails.Exam_Duration, examDetails.No_of_Questions]);
+  }, [examDetails.Exam_Duration, examDetails.Questions_To_Attend]);
 
   useEffect(() => {
     if (examDetails.No_of_Questions > questions.length) {
@@ -168,22 +229,7 @@ const EditDetails = () => {
                 onChange={handleExamChange}
                 required
               />
-            </div>
-            <div className="mb-3">
-              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
-              <select
-                className="form-control"
-                name="Difficulty_Level"
-                value={examDetails.Difficulty_Level}
-                onChange={handleExamChange}
-                required
-              >
-                <option value="">Select Difficulty Level</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-              </select>
-            </div>
+            </div>            
             <div className="mb-3">
               <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
               <input
@@ -211,20 +257,6 @@ const EditDetails = () => {
                 <option value="Others">Others</option>
               </select>
             </div>
-          </div>
-          <div className="col-md-6">
-            <div className="mb-3">
-              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
-              <input
-                type="number"
-                className="form-control"
-                name="No_of_Questions"
-                placeholder="Enter the number of questions"
-                value={examDetails.No_of_Questions}
-                onChange={handleExamChange}
-                required
-              />
-            </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
               <input
@@ -249,6 +281,48 @@ const EditDetails = () => {
                 required
               />
             </div>
+          </div>
+          <div className="col-md-6">
+          <div className="mb-3">
+              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+              <select
+                className="form-control"
+                name="Difficulty_Level"
+                value={examDetails.Difficulty_Level}
+                onChange={handleExamChange}
+                required
+              >
+                <option value="">Select Difficulty Level</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="number"
+                className="form-control"
+                name="No_of_Questions"
+                placeholder="Enter the number of questions"
+                value={examDetails.No_of_Questions}
+                onChange={handleExamChange}
+                required
+              />
+            </div>
+            <div className="mb-3">
+                <label className="form-label fw-bold">Questions To Attend<span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="number"
+                  className="form-control"
+                  name="Questions_To_Attend"
+                  placeholder="Enter number of questions to attend"
+                  value={examDetails.Questions_To_Attend}
+                  onChange={handleExamChange}
+                  required
+                />
+                {error && <Alert variant="danger">{error}</Alert>}
+            </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
               <input
@@ -259,6 +333,17 @@ const EditDetails = () => {
                 onChange={handleExamChange}
                 required
               />
+            </div>
+            <div className="mb-3">
+                <label className="form-label fw-bold">Publish Date<span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="datetime-local"
+                  className="form-control"
+                  name="Publish_Date"
+                  value={moment(examDetails.Publish_Date).format('YYYY-MM-DDTHH:mm')}
+                  onChange={handleExamChange}
+                  required
+                />
             </div>
           </div>
         </div>
@@ -303,9 +388,15 @@ const EditDetails = () => {
         </Modal.Header>
         <Modal.Body>
           <form>
-            <div className="mb-3">
+          <div className="mb-3">
               <label className="form-label fw-bold">Your Question</label>
-              <select className="form-control" onChange={handleAuthoredQuestionSelect}>
+              <select
+                className="form-control"
+                id="authoredQuestions"
+                name="authoredQuestions"
+                value={selectedQuestionId}
+                onChange={handleAuthoredQuestionSelect}
+              >
                 <option value="">Select a question</option>
                 {authoredQuestions.map((q) => (
                   <option key={q.Question_ID} value={q.Question_ID}>
@@ -317,6 +408,7 @@ const EditDetails = () => {
             <div className="mb-3">
               <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <textarea
+                type="text"
                 className="form-control"
                 name="Question"
                 placeholder="Enter the question"
@@ -395,8 +487,7 @@ const EditDetails = () => {
             </div>
           </form>
         </Modal.Body>
-        <Modal.Footer>
-          
+        <Modal.Footer>          
           {questionIndex > 0 && (
             <Button variant="secondary" onClick={handleQuestionPrevious}>
               Previous
