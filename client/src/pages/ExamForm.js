@@ -6,6 +6,7 @@ import moment from 'moment';
 import { useNavigate } from 'react-router-dom';
 import { Modal, Button, Alert } from 'react-bootstrap';
 import { useUser } from "@clerk/clerk-react";
+import '../css/ExamForm.css';
 
 const ExamForm = () => {
   const { user } = useUser();
@@ -23,7 +24,8 @@ const ExamForm = () => {
     Author_Id: '',
     Exam_Valid_Upto: '',
     Questions_To_Attend: '',
-    Publish_Date: ''
+    Publish_Date: '',
+    Negative_Marking: false
   });
 
   const [authoredQuestions, setAuthoredQuestions] = useState([]);
@@ -37,7 +39,8 @@ const ExamForm = () => {
     Answer_2: '',
     Answer_3: '',
     Answer_4: '',
-    Correct_Answer: ''
+    Correct_Answer: '',
+    Difficulty_Level: ''
   });
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
@@ -75,10 +78,10 @@ const ExamForm = () => {
         Questions_To_Attend: prevDetails.No_of_Questions
       }));
     }
-  }, [examDetails.No_of_Questions]);
+  }, [examDetails.No_of_Questions]); 
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     let errorMessage = '';
     if (name === 'Questions_To_Attend') {
       const numValue = Number(value);
@@ -92,6 +95,7 @@ const ExamForm = () => {
     setExamDetails({
       ...examDetails,
       [name]: value,
+      [name]: type === 'checkbox' ? checked : value,
     });
     setError(errorMessage);
   };
@@ -127,7 +131,8 @@ const ExamForm = () => {
         Answer_2: '',
         Answer_3: '',
         Answer_4: '',
-        Correct_Answer: ''
+        Correct_Answer: '',
+        Difficulty_Level: ''
       });
     }
   };
@@ -148,7 +153,8 @@ const ExamForm = () => {
       Answer_2: '',
       Answer_3: '',
       Answer_4: '',
-      Correct_Answer: ''
+      Correct_Answer: '',
+      Difficulty_Level: ''
     });
     setSelectedQuestionId('');
 
@@ -322,6 +328,17 @@ const ExamForm = () => {
                 required
               />
             </div>
+            <div className="mb-3">
+              <label className="form-check-label fw-bold me-4" htmlFor="flexCheckbox">Negative Marking</label>
+              <input
+                type="checkbox"
+                className="form-check-input custom-checkbox"
+                id="flexCheckbox"
+                name="Negative_Marking"
+                checked={examDetails.Negative_Marking}
+                onChange={handleChange}
+              />
+            </div>
           </div>
           <div className="col-md-6">
             <div className="mb-3">
@@ -425,7 +442,7 @@ const ExamForm = () => {
                 placeholder="Enter the question"
                 value={questionDetails.Question}
                 onChange={handleQuestionChange}
-                required
+                //required
               />
             </div>
             <div className="mb-3">
@@ -437,7 +454,7 @@ const ExamForm = () => {
                 placeholder="Enter answer 1"
                 value={questionDetails.Answer_1}
                 onChange={handleQuestionChange}
-                required
+                //required
               />
             </div>
             <div className="mb-3">
@@ -449,7 +466,7 @@ const ExamForm = () => {
                 placeholder="Enter answer 2" 
                 value={questionDetails.Answer_2}
                 onChange={handleQuestionChange}
-                required
+                //required
               />
             </div>
             <div className="mb-3">
@@ -461,7 +478,7 @@ const ExamForm = () => {
                 placeholder="Enter answer 3"
                 value={questionDetails.Answer_3}
                 onChange={handleQuestionChange}
-                required
+                //required
               />
             </div>
             <div className="mb-3">
@@ -473,7 +490,7 @@ const ExamForm = () => {
                 placeholder="Enter answer 4"
                 value={questionDetails.Answer_4}
                 onChange={handleQuestionChange}
-                required
+                //required
               />
             </div>
             <div className="mb-3">
@@ -486,13 +503,28 @@ const ExamForm = () => {
                   ...questionDetails,
                   Correct_Answer: parseInt(e.target.value) // Convert to number
                 })}
-                required
+                //required
               >
                 <option value="">Select Correct Answer</option>
                 <option value="1">Answer 1</option>
                 <option value="2">Answer 2</option>
                 <option value="3">Answer 3</option>
                 <option value="4">Answer 4</option>
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+              <select
+                className="form-control"
+                name="Difficulty_Level"
+                value={questionDetails.Difficulty_Level}
+                onChange={handleQuestionChange}
+                //required
+              >
+                <option value="">Select Difficulty Level</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
               </select>
             </div>
           </form>

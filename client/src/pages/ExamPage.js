@@ -118,10 +118,14 @@ const ExamPage = () => {
 
   const endExam = () => {
     let newScore = 0;
+    const isNegativeMarking = examDetails.Negative_Marking;
+
     answers.forEach((answer, index) => {
       const questionId = questions[index].Question_ID;
       if (answer === correctAnswers[questionId]) {
         newScore += 1;
+      } else if (answer !== null && isNegativeMarking) {
+        newScore -= 1;
       }
     });
     setScore(newScore);

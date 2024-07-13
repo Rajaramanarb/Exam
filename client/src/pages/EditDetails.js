@@ -493,7 +493,7 @@ const EditDetails = () => {
               Previous
             </Button>
           )}
-          {questionIndex === questions.length - 1 && (
+          {questionIndex < questions.length - 1 && (
             <Button variant="primary" onClick={handleQuestionNext}>
             Next
           </Button>

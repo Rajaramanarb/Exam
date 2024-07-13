@@ -75,7 +75,8 @@ const ExamMasterSchema = new mongoose.Schema({
     default: () => moment().tz('Asia/Kolkata').format('YYYY-MM-DD hh:mm A')
   },
   Publish_Date: { type: String, required: true },
-  Exam_Valid_Upto: { type: String, required: true }
+  Exam_Valid_Upto: { type: String, required: true },
+  Negative_Marking: { type: Boolean, required: true }
 });
 
 ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });
@@ -86,12 +87,13 @@ const QuestionMasterSchema = new mongoose.Schema({
   Exam_ID: { type: [Number], required: true, ref: 'Exam_Master' },
   Author_Id: { type: String, required: true },
   Question_ID: { type: Number, unique: true },
-  Question: { type: String, required: true },
-  Answer_1: { type: String, required: true },
-  Answer_2: { type: String, required: true },
-  Answer_3: { type: String, required: true },
-  Answer_4: { type: String, required: true },
-  Correct_Answer: { type: Number, required: true, min: 1, max: 4 }
+  Question: { type: String },
+  Answer_1: { type: String },
+  Answer_2: { type: String },
+  Answer_3: { type: String },
+  Answer_4: { type: String },
+  Correct_Answer: { type: Number, min: 1, max: 4 },
+  Difficulty_Level: { type: String }
 });
 
 QuestionMasterSchema.plugin(AutoIncrement, { inc_field: 'Question_ID', start_seq: 1 });
