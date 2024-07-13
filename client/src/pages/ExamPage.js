@@ -210,6 +210,7 @@ const ExamPage = () => {
           <p><strong>Exam Category:</strong> {examDetails.Exam_Category}</p>
           <p><strong>Difficulty Level:</strong> {examDetails.Difficulty_Level}</p>
           <p><strong>Number of Questions:</strong> {examDetails.Questions_To_Attend}</p>
+          <p><strong>Negative Marking:</strong> {examDetails.Negative_Marking ? "Yes" : "No"}</p>
           <p><strong>Exam Duration:</strong> {examDetails.Exam_Duration} minutes</p>
           <p><strong>Question Duration:</strong> {examDetails.Question_Duration} minutes</p>
           <b>Are you ready to start the exam?</b>
