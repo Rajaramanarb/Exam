@@ -44,11 +44,15 @@ const ExamForm = () => {
   });
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
+  const apiUrl = process.env.NODE_ENV === 'production' 
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+
   useEffect(() => {
     const fetchAuthoredQuestions = async () => {
       try {
         if (user && user.id) {
-          const response = await axios.get(`http://localhost:9000/author-questions/${user.id}`);
+          const response = await axios.get(`${apiUrl}/author-questions/${user.id}`);
           setAuthoredQuestions(response.data);
         }
       } catch (error) {
@@ -176,10 +180,6 @@ const ExamForm = () => {
     saveExamAndQuestions(updatedQuestions);
   };  
 
-  const apiUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_DEVELOPMENT;
-
   const handleQuestionPrevious = () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
@@ -200,7 +200,7 @@ const ExamForm = () => {
   
       console.log('Exam data to be saved:', examData); // Log exam data
   
-      const examResponse = await axios.post(`http://localhost:9000/exams`, examData);
+      const examResponse = await axios.post(`${apiUrl}/exams`, examData);
       const examId = examResponse.data.Exam_Id;
   
       console.log('Exam saved successfully with ID:', examId); // Log successful exam save
@@ -219,7 +219,7 @@ const ExamForm = () => {
   
             console.log('Updating existing question:', updatedQuestion); // Log question update
   
-            await axios.put(`http://localhost:9000/questions/${questionsToSave[i].Question_ID}`, updatedQuestion);
+            await axios.put(`${apiUrl}/questions/${questionsToSave[i].Question_ID}`, updatedQuestion);
           }
         } else {
           const questionData = {
@@ -231,7 +231,7 @@ const ExamForm = () => {
   
           console.log('Saving new question:', questionData); // Log new question save
   
-          await axios.post(`http://localhost:9000/questions`, questionData);
+          await axios.post(`${apiUrl}/questions`, questionData);
         }
       }
   

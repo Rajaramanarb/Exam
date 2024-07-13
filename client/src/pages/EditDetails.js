@@ -22,10 +22,14 @@ const EditDetails = () => {
   const [error, setError] = useState('');
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
+  const apiUrl = process.env.NODE_ENV === 'production' 
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+
   useEffect(() => {
     const fetchExamDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:9000/exams/${examId}`);
+        const response = await axios.get(`${apiUrl}/exams/${examId}`);
         setExamDetails(response.data);
       } catch (error) {
         toast.error('Error fetching exam details:');
@@ -35,7 +39,7 @@ const EditDetails = () => {
 
     const fetchQuestions = async () => {
       try {
-        const response = await axios.get(`http://localhost:9000/questions/${examId}`);
+        const response = await axios.get(`${apiUrl}/questions/${examId}`);
         setQuestions(response.data);
       } catch (error) {
         toast.error('Error fetching questions');
@@ -46,7 +50,7 @@ const EditDetails = () => {
     const fetchAuthoredQuestions = async () => {
       try {
         if (user && user.id) {
-          const response = await axios.get(`http://localhost:9000/author-questions/${user.id}`);
+          const response = await axios.get(`${apiUrl}/author-questions/${user.id}`);
           setAuthoredQuestions(response.data);
         }
       } catch (error) {
@@ -160,7 +164,7 @@ const EditDetails = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A'),
         Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
-      await axios.put(`http://localhost:9000/exams/${examId}`, examData);
+      await axios.put(`${apiUrl}/exams/${examId}`, examData);
       for (let i = 0; i < questions.length; i++) {
         if (questions[i].Question_ID) {
           // Check if the question already exists and is just being added to the exam
@@ -171,10 +175,10 @@ const EditDetails = () => {
               ...questions[i],
               Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])] // Ensure unique Exam_IDs
             };
-            await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, updatedQuestion);
+            await axios.put(`${apiUrl}/questions/${questions[i].Question_ID}`, updatedQuestion);
           } else {
             // Otherwise, update the question normally
-            await axios.put(`http://localhost:9000/questions/${questions[i].Question_ID}`, questions[i]);
+            await axios.put(`${apiUrl}/questions/${questions[i].Question_ID}`, questions[i]);
           }
         } else {
           const questionData = {
@@ -183,7 +187,7 @@ const EditDetails = () => {
             ...questions[i],
             Correct_Answer: parseInt(questions[i].Correct_Answer)
           };
-          await axios.post(`http://localhost:9000/questions`, questionData);
+          await axios.post(`${apiUrl}/questions`, questionData);
         }
       }
       toast.success('Exam and questions updated successfully');

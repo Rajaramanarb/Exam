@@ -17,7 +17,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchLicense = async () => {
       try {
-        const response = await fetch(`http://localhost:9000/license`);
+        const response = await fetch(`${apiUrl}/license`);
         if (response.ok) {
           const data = await response.json();
           if (data.version > licenseVersion) {

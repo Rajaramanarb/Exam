@@ -11,11 +11,14 @@ const HostedExam = () => {
   const [exams, setExams] = useState([]);
   const [editableExams, setEditableExams] = useState({});
   const navigate = useNavigate();
+  const apiUrl = process.env.NODE_ENV === 'production' 
+    ? process.env.REACT_APP_API_URL_PRODUCTION
+    : process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`http://localhost:9000/hosted-exams/${user.id}`);
+        const response = await axios.get(`${apiUrl}/hosted-exams/${user.id}`);
         setExams(response.data);
         fetchEditStatus(response.data);
       } catch (error) {
@@ -27,7 +30,7 @@ const HostedExam = () => {
       try {
         const editStatusData = {};
         for (const exam of exams) {
-          const resultResponse = await axios.get(`http://localhost:9000/examresults/${exam.Exam_Id}`);
+          const resultResponse = await axios.get(`${apiUrl}/examresults/${exam.Exam_Id}`);
           editStatusData[exam.Exam_Id] = !resultResponse.data || resultResponse.data.length === 0;
         }
         setEditableExams(editStatusData);

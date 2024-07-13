@@ -36,7 +36,7 @@ const ExamPage = () => {
   useEffect(() => {
     const fetchExamDetails = async () => {
       try {
-        const response = await axios.get(`http://localhost:9000/exams/${examId}`);
+        const response = await axios.get(`${apiUrl}/exams/${examId}`);
         const exam = response.data;
         setExamDetails(exam);
         setExamDuration(exam.Exam_Duration);
@@ -52,7 +52,7 @@ const ExamPage = () => {
     
         // Fetch all questions set by the author
         for (let i = 0; i < noOfQuestions; i++) {
-          const questionResponse = await axios.get(`http://localhost:9000/questions/${examId}/${i}`);
+          const questionResponse = await axios.get(`${apiUrl}/questions/${examId}/${i}`);
           const questionData = questionResponse.data;
           questionData.Question_ID = Number(questionData.Question_ID);
           allQuestions.push(questionData);
@@ -153,7 +153,7 @@ const ExamPage = () => {
     const examResult = { ...examResultBuffer, Rating: rating };
 
     try {
-      await axios.post(`http://localhost:9000/exam-results`, examResult);
+      await axios.post(`${apiUrl}/exam-results`, examResult);
       toast.success('Exam results saved successfully!');
       setShowScoreModal(false);
       navigate('/');

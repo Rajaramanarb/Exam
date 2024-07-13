@@ -25,7 +25,7 @@ const TakeExam = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`http://localhost:9000/exams`);
+        const response = await axios.get(`${apiUrl}/exams`);
         if (Array.isArray(response.data)) {
           const validExams = response.data.filter(exam => {
             const now = moment();
@@ -51,7 +51,7 @@ const TakeExam = () => {
       try {
         const ratingsData = {};
         for (const exam of exams) {
-          const ratingResponse = await axios.get(`http://localhost:9000/rating/${exam.Exam_Id}`);
+          const ratingResponse = await axios.get(`${apiUrl}/rating/${exam.Exam_Id}`);
           if (ratingResponse.data.length > 0) {
             ratingsData[exam.Exam_Id] = ratingResponse.data[0].averageRating;
           }
