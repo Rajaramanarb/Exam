@@ -7,6 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '@clerk/clerk-react';
+import '../css/ExamForm.css';
 
 const EditDetails = () => {
   const { user } = useUser();
@@ -71,7 +72,7 @@ const EditDetails = () => {
   }, [examDetails.No_of_Questions]);
 
   const handleExamChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     let errorMessage = '';
     if (name === 'Questions_To_Attend') {
       const numValue = Number(value);
@@ -82,7 +83,7 @@ const EditDetails = () => {
       }
     }
 
-    setExamDetails({ ...examDetails, [name]: value });
+    setExamDetails({ ...examDetails, [name]: value, [name]: type === 'checkbox' ? checked : value });
     setError(errorMessage);
   };
 
@@ -104,7 +105,8 @@ const EditDetails = () => {
         Answer_2: '',
         Answer_3: '',
         Answer_4: '',
-        Correct_Answer: ''
+        Correct_Answer: '',
+        Difficulty_Level: ''
       });
     }
   };
@@ -143,7 +145,8 @@ const EditDetails = () => {
       Answer_2: '',
       Answer_3: '',
       Answer_4: '',
-      Correct_Answer: ''
+      Correct_Answer: '',
+      Difficulty_Level: ''
     });
     setSelectedQuestionId('');
     setShowModal(false);
@@ -207,6 +210,7 @@ const EditDetails = () => {
         Answer_3: '',
         Answer_4: '',
         Correct_Answer: '',
+        Difficulty_Level: ''
       });
       setQuestions([...questions, ...newQuestions]);
     }
@@ -279,6 +283,17 @@ const EditDetails = () => {
                 value={examDetails.Question_Duration}
                 readOnly
                 required
+              />
+            </div>
+            <div className="mb-3">
+              <label className="form-check-label fw-bold me-4" htmlFor="flexCheckbox">Negative Marking</label>
+              <input
+                type="checkbox"
+                className="form-check-input custom-checkbox"
+                id="flexCheckbox"
+                name="Negative_Marking"
+                checked={examDetails.Negative_Marking}
+                onChange={handleExamChange}
               />
             </div>
           </div>
@@ -483,6 +498,21 @@ const EditDetails = () => {
                 <option value="2">Answer 2</option>
                 <option value="3">Answer 3</option>
                 <option value="4">Answer 4</option>
+              </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+              <select
+                className="form-control"
+                name="Difficulty_Level"
+                value={questionDetails.Difficulty_Level}
+                onChange={handleQuestionChange}
+                required
+              >
+                <option value="">Select Difficulty Level</option>
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
               </select>
             </div>
           </form>

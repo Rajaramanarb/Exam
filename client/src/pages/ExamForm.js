@@ -166,7 +166,15 @@ const ExamForm = () => {
         setQuestionDetails(updatedQuestions[questionIndex + 1]);
       }
     }
-  };
+  };  
+
+  const handleSave = () => {
+    const updatedQuestions = [...questions];
+    updatedQuestions[questionIndex] = questionDetails;
+  
+    setQuestions(updatedQuestions);
+    saveExamAndQuestions(updatedQuestions);
+  };  
 
   const apiUrl = process.env.NODE_ENV === 'production' 
     ? process.env.REACT_APP_API_URL_PRODUCTION
@@ -538,6 +546,11 @@ const ExamForm = () => {
           <Button variant="primary" onClick={handleQuestionNext}>
             {questionIndex + 1 === parseInt(examDetails.No_of_Questions) ? 'Finish' : 'Next'}
           </Button>
+          {questionIndex + 1 !== parseInt(examDetails.No_of_Questions) && (
+            <Button variant="success" onClick={handleSave}>
+              Save
+            </Button>
+          )}
         </Modal.Footer>
       </Modal>
     </div>
