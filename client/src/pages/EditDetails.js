@@ -283,7 +283,6 @@ const EditDetails = () => {
                 type="number"
                 className="form-control"
                 name="Question_Duration"
-                placeholder="Enter the question duration in minutes"
                 value={examDetails.Question_Duration}
                 readOnly
                 required

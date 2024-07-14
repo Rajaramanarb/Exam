@@ -329,8 +329,7 @@ const ExamForm = () => {
               <input
                 type="number"
                 className="form-control"
-                name="Question_Duration"
-                placeholder="Enter the question duration in minutes"
+                name="Question_Duration"                
                 value={examDetails.Question_Duration}
                 readOnly
                 required
@@ -538,6 +537,7 @@ const ExamForm = () => {
           </form>
         </Modal.Body>
         <Modal.Footer>
+          <div className="alert-message">*Note: Click on save button if you want to continue later.</div>
           {questionIndex > 0 && (
             <Button variant="secondary" onClick={handleQuestionPrevious}>
               Previous
@@ -550,7 +550,7 @@ const ExamForm = () => {
             <Button variant="success" onClick={handleSave}>
               Save
             </Button>
-          )}
+          )}          
         </Modal.Footer>
       </Modal>
     </div>

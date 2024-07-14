@@ -13,4 +13,13 @@
   .custom-checkbox:checked {
     background-color: #0e0af3; /* Blue background color when checked */
   }
+
+  .alert-message {
+    display: inline-block;
+    margin-right: 10px;
+    font-size: 0.9em;
+    color: #5a5a5a;
+    flex: 1;
+    text-align: left;
+  }  
   

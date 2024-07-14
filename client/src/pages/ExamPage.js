@@ -111,7 +111,7 @@ const ExamPage = () => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setCurrentQuestion(questions[currentQuestionIndex + 1]);
     } else {
-      toast.success('You have completed the exam!');
+      //toast.success('You have completed the exam!');
       endExam();
     }
   };
