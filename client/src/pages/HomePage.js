@@ -10,9 +10,7 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [licenseText, setLicenseText] = useState(localStorage.getItem('license') || '');
   const [licenseVersion, setLicenseVersion] = useState(localStorage.getItem('licenseVersion') || 0);
-  const apiUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchLicense = async () => {

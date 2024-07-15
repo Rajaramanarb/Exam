@@ -10,7 +10,7 @@ const AutoIncrement = require('mongoose-sequence')(mongoose);
 
 const app = express();
 const router = express.Router();
-const PORT = process.env.X_ZOHO_CATALYST_LISTEN_PORT || 9000;
+const PORT = process.env.PORT;
 
 app.use(cors());
 app.use(bodyParser.json());

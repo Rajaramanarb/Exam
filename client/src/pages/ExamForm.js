@@ -44,9 +44,7 @@ const ExamForm = () => {
   });
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
-  const apiUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchAuthoredQuestions = async () => {

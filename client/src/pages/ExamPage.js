@@ -29,9 +29,7 @@ const ExamPage = () => {
   const [rating, setRating] = useState(0); // State to handle the rating
   const [examResultBuffer, setExamResultBuffer] = useState(null); // Buffer for exam results
 
-  const apiUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchExamDetails = async () => {

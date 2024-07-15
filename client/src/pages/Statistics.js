@@ -10,9 +10,7 @@ ChartJS.register(ArcElement, Tooltip, Legend);
 const Statistics = () => {
   const [examResults, setExamResults] = useState([]);
   const { user } = useUser();
-  const apiUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchExamResults = async () => {

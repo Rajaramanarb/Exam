@@ -11,9 +11,7 @@ const HostedExam = () => {
   const [exams, setExams] = useState([]);
   const [editableExams, setEditableExams] = useState({});
   const navigate = useNavigate();
-  const apiUrl = process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_API_URL_PRODUCTION
-    : process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
     const fetchExams = async () => {
