@@ -40,7 +40,8 @@ const ExamForm = () => {
     Answer_3: '',
     Answer_4: '',
     Correct_Answer: '',
-    Difficulty_Level: ''
+    Difficulty_Level: '',
+    Image: null 
   });
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
 
@@ -113,11 +114,18 @@ const ExamForm = () => {
   }, [examDetails.Exam_Duration, examDetails.Questions_To_Attend]);
 
   const handleQuestionChange = (e) => {
-    const { name, value } = e.target;
-    setQuestionDetails({
-      ...questionDetails,
-      [name]: value,
-    });
+    const { name, value, files } = e.target;
+    if (name === 'Image') {
+      setQuestionDetails({
+        ...questionDetails,
+        [name]: files[0] // Save the image file
+      });
+    } else {
+      setQuestionDetails({
+        ...questionDetails,
+        [name]: value,
+      });
+    }
   };
 
   const handleAuthoredQuestionSelect = (e) => {
@@ -134,7 +142,8 @@ const ExamForm = () => {
         Answer_3: '',
         Answer_4: '',
         Correct_Answer: '',
-        Difficulty_Level: ''
+        Difficulty_Level: '',
+        Image: null 
       });
     }
   };
@@ -156,7 +165,8 @@ const ExamForm = () => {
       Answer_3: '',
       Answer_4: '',
       Correct_Answer: '',
-      Difficulty_Level: ''
+      Difficulty_Level: '',
+      Image: null 
     });
     setSelectedQuestionId('');
 
@@ -220,16 +230,27 @@ const ExamForm = () => {
             await axios.put(`${apiUrl}/questions/${questionsToSave[i].Question_ID}`, updatedQuestion);
           }
         } else {
-          const questionData = {
-            Exam_ID: examId,
-            Author_Id: user.id,
-            ...questionsToSave[i],
-            Correct_Answer: parseInt(questionsToSave[i].Correct_Answer)
-          };
+          const formData = new FormData();
+          formData.append('Exam_ID', examId);
+          formData.append('Author_Id', user.id);
+          formData.append('Question', questionsToSave[i].Question);
+          formData.append('Answer_1', questionsToSave[i].Answer_1);
+          formData.append('Answer_2', questionsToSave[i].Answer_2);
+          formData.append('Answer_3', questionsToSave[i].Answer_3);
+          formData.append('Answer_4', questionsToSave[i].Answer_4);
+          formData.append('Correct_Answer', parseInt(questionsToSave[i].Correct_Answer));
+          formData.append('Difficulty_Level', questionsToSave[i].Difficulty_Level);
+          if (questionsToSave[i].Image) {
+            formData.append('Image', questionsToSave[i].Image);
+          }
   
-          console.log('Saving new question:', questionData); // Log new question save
+          console.log('Saving new question with image:', formData); // Log new question save
   
-          await axios.post(`${apiUrl}/questions`, questionData);
+          await axios.post(`${apiUrl}/questions`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
         }
       }
   
@@ -239,7 +260,7 @@ const ExamForm = () => {
       console.error('Error details:', error.response ? error.response.data : error.message); // Log detailed error
       toast.error('Error saving exam or questions');
     }
-  };  
+  };
 
   return (
   <div>
@@ -531,6 +552,15 @@ const ExamForm = () => {
                 <option value="Medium">Medium</option>
                 <option value="Hard">Hard</option>
               </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label">Add image</label>
+              <input
+                className="form-control"
+                type="file"
+                name="Image"
+                onChange={handleQuestionChange}
+              />
             </div>
           </form>
         </Modal.Body>

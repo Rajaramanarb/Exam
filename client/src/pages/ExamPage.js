@@ -71,9 +71,9 @@ const ExamPage = () => {
         toast.error('Error fetching exam details');
       }
     };
-    
+
     fetchExamDetails();
-  }, [examId, apiUrl]);    
+  }, [examId, apiUrl]);
 
   useEffect(() => {
     if (timeLeft === 0) {
@@ -197,7 +197,7 @@ const ExamPage = () => {
         </Nav>
       </Navbar>
       <h2 className="text-center">Exam</h2>
-      <Modal show={showStartModal} onHide={() => setShowStartModal(false)}  backdrop="static">
+      <Modal show={showStartModal} onHide={() => setShowStartModal(false)} backdrop="static">
         <Modal.Header>
           <Modal.Title>Start Exam</Modal.Title>
         </Modal.Header>
@@ -225,6 +225,11 @@ const ExamPage = () => {
               <div>Time Left: {formatTime(timeLeft)}</div>
               <div>Question Time Left: {formatTime(questionTimesLeft[currentQuestionIndex])}</div>
             </div>
+            {currentQuestion.Image && (
+              <div className="question-image mb-3">
+                <img src={`${apiUrl}/${currentQuestion.Image}`} alt="Question" className="img-fluid" style={{ maxWidth: '300px', maxHeight: '300px' }}/>
+              </div>
+            )}
             <h5 className="card-title">{currentQuestion.Question}</h5>
             <div className="answers">
               {[currentQuestion.Answer_1, currentQuestion.Answer_2, currentQuestion.Answer_3, currentQuestion.Answer_4].map((answer, index) => (

@@ -7,13 +7,33 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const moment = require('moment-timezone');
 const AutoIncrement = require('mongoose-sequence')(mongoose);
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const router = express.Router();
 const PORT = process.env.PORT;
 
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storage });
+
 app.use(cors());
 app.use(bodyParser.json());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -93,7 +113,8 @@ const QuestionMasterSchema = new mongoose.Schema({
   Answer_3: { type: String },
   Answer_4: { type: String },
   Correct_Answer: { type: Number, min: 1, max: 4 },
-  Difficulty_Level: { type: String }
+  Difficulty_Level: { type: String },
+  Image: { type: String }
 });
 
 QuestionMasterSchema.plugin(AutoIncrement, { inc_field: 'Question_ID', start_seq: 1 });
@@ -181,9 +202,12 @@ app.get('/exams', async (req, res) => {
   }
 });
 
-router.post('/questions', async (req, res) => {
+router.post('/questions', upload.single('Image'), async (req, res) => {
   try {
     const questionData = req.body;
+    if (req.file) {
+      questionData.Image = req.file.path;
+    }
 
     const newQuestion = new Question_Master(questionData);
     await newQuestion.save();
@@ -193,6 +217,7 @@ router.post('/questions', async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
+
 
 router.get('/questions/:examId/:index', async (req, res) => {
   try {
