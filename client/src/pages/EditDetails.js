@@ -21,6 +21,11 @@ const EditDetails = () => {
   const [authoredQuestions, setAuthoredQuestions] = useState([]);
   const [error, setError] = useState('');
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
+  const [setQuestionSubject] = useState('');
+  const questionSubjectOptions = {
+    NEET: ['Physics', 'Chemistry', 'Botany', 'Zoology'],
+    JEE: ['Physics', 'Chemistry', 'Maths']
+  };
 
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
@@ -76,6 +81,11 @@ const EditDetails = () => {
   const handleExamChange = (e) => {
     const { name, value, type, checked } = e.target;
     let errorMessage = '';
+
+    if (name === 'Exam_Category') {
+      setQuestionSubject(''); // Reset Question Subject
+    }
+  
     if (name === 'Questions_To_Attend') {
       const numValue = Number(value);
       if (numValue > examDetails.No_of_Questions) {
@@ -108,10 +118,31 @@ const EditDetails = () => {
         Answer_3: '',
         Answer_4: '',
         Correct_Answer: '',
-        Difficulty_Level: ''
+        Difficulty_Level: '',
+        Question_Subject: '',        
       });
     }
   };
+
+  const handleQuestionDelete = async (index) => {
+    const questionId = questions[index].Question_ID;
+    try {
+      await axios.delete(`${apiUrl}/questions/${questionId}`);
+      toast.success('Question deleted successfully');
+  
+      // Update examDetails and questions state
+      setExamDetails(prevDetails => ({
+        ...prevDetails,
+        No_of_Questions: prevDetails.No_of_Questions - 1
+      }));
+  
+      const updatedQuestions = questions.filter((_, i) => i !== index);
+      setQuestions(updatedQuestions);
+    } catch (error) {
+      toast.error('Error deleting question');
+      console.error('Error deleting question:', error);
+    }
+  };   
 
   const handleQuestionEdit = (index) => {
     setQuestionIndex(index);
@@ -148,7 +179,8 @@ const EditDetails = () => {
       Answer_3: '',
       Answer_4: '',
       Correct_Answer: '',
-      Difficulty_Level: ''
+      Difficulty_Level: '',
+      Question_Subject: '',
     });
     setSelectedQuestionId('');
     setShowModal(false);
@@ -212,7 +244,8 @@ const EditDetails = () => {
         Answer_3: '',
         Answer_4: '',
         Correct_Answer: '',
-        Difficulty_Level: ''
+        Difficulty_Level: '',
+        Question_Subject: '',
       });
       setQuestions([...questions, ...newQuestions]);
     }
@@ -258,8 +291,10 @@ const EditDetails = () => {
                 required
               >
                 <option value="">Select Category</option>
-                <option value="School">School</option>
+                <option value="LowerGrade">Lower Grade</option>
                 <option value="College">College</option>
+                <option value="NEET">NEET</option>
+                <option value="JEE">JEE</option>
                 <option value="Others">Others</option>
               </select>
             </div>
@@ -391,7 +426,8 @@ const EditDetails = () => {
               <td>{question.Answer_4}</td>
               <td>{question.Correct_Answer}</td>
               <td>
-                <Button variant="warning" onClick={() => handleQuestionEdit(index)}>✏️ Edit</Button>
+                <Button variant="warning" className="me-2" onClick={() => handleQuestionEdit(index)}>✏️ Edit</Button>
+                <Button variant="danger" onClick={() => handleQuestionDelete(index)}>🗑️ Delete</Button>
               </td>
             </tr>
           ))}
@@ -421,6 +457,25 @@ const EditDetails = () => {
                 ))}
               </select>
             </div>
+            {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
+              <div className="mb-3">
+                <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
+                <select
+                  className="form-control"
+                  name="Question_Subject"
+                  value={questionDetails.Question_Subject}
+                  onChange={handleQuestionChange}
+                  //required
+                >
+                  <option value="">Select Subject</option>
+                  {questionSubjectOptions[examDetails.Exam_Category].map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <div className="mb-3">
               <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <textarea
@@ -516,6 +571,11 @@ const EditDetails = () => {
                 <option value="Hard">Hard</option>
               </select>
             </div>
+            {questionDetails.Image && (
+              <div className="question-image mb-3">
+                <img src={`${apiUrl}/${questionDetails.Image}`} alt="Question" className="img-fluid" style={{ maxWidth: '300px', maxHeight: '300px' }}/>
+              </div>
+            )}
           </form>
         </Modal.Body>
         <Modal.Footer>          

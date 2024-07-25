@@ -166,6 +166,7 @@ const TakeExam = () => {
             <th>Exam ID</th>
             <th>Description</th>
             <th>Subject</th>
+            <th>Exam Category</th>
             <th>Author</th>
             <th>Rating</th>
             <th>Difficulty Level</th>            
@@ -179,6 +180,7 @@ const TakeExam = () => {
                 <td>{exam.Exam_Id}</td>
                 <td>{exam.Exam_Desc}</td>
                 <td>{exam.Subject}</td>
+                <td>{exam.Exam_Category}</td>
                 <td>{exam.Author_Name}</td>
                 <td>{ratings[exam.Exam_Id]?.toFixed(1) || 'N/A'} of 5</td>
                 <td>

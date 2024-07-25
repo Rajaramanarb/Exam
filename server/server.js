@@ -114,6 +114,7 @@ const QuestionMasterSchema = new mongoose.Schema({
   Answer_4: { type: String },
   Correct_Answer: { type: Number, min: 1, max: 4 },
   Difficulty_Level: { type: String },
+  Question_Subject: { type: String},
   Image: { type: String }
 });
 
@@ -218,7 +219,6 @@ router.post('/questions', upload.single('Image'), async (req, res) => {
   }
 });
 
-
 router.get('/questions/:examId/:index', async (req, res) => {
   try {
     const { examId, index } = req.params;
@@ -271,21 +271,62 @@ router.get('/author-questions/:authorId', async (req, res) => {
   }
 });
 
-router.put('/questions/:questionId', async (req, res) => {
+router.put('/questions/:questionId', upload.single('Image'), async (req, res) => {
   try {
     const { questionId } = req.params;
     const questionData = req.body;
 
-    const updatedQuestion = await Question_Master.findOneAndUpdate({ Question_ID : questionId }, questionData, { new: true });
+    const existingQuestion = await Question_Master.findOne({ Question_ID: questionId });
 
-    if (!updatedQuestion) {
+    if (!existingQuestion) {
       return res.status(404).send({ message: 'Question not found' });
     }
+
+    if (req.file) {
+      if (existingQuestion.Image) {
+        const existingImagePath = path.resolve(existingQuestion.Image);
+        fs.unlink(existingImagePath, (err) => {
+          if (err) {
+            console.error('Error deleting existing image:', err);
+          }
+        });
+      }
+      questionData.Image = req.file.path;
+    }
+
+    const updatedQuestion = await Question_Master.findOneAndUpdate({ Question_ID: questionId }, questionData, { new: true });
 
     res.status(200).send({ message: 'Question updated successfully', question: updatedQuestion });
   } catch (error) {
     console.error('Error updating question:', error);
     res.status(500).send({ message: 'Failed to update question' });
+  }
+});
+
+router.delete('/questions/:questionId', async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const question = await Question_Master.findOne({ Question_ID: questionId });
+
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+
+    if (question.Image) {
+      const imagePath = path.resolve(question.Image);
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error('Error deleting image file:', err);
+        }
+      });
+    }
+
+    await Question_Master.deleteOne({ Question_ID: questionId });
+
+    res.status(200).json({ message: 'Question deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting question:', error);
+    res.status(500).json({ message: 'Failed to delete question' });
   }
 });
 

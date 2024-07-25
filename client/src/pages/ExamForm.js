@@ -41,9 +41,15 @@ const ExamForm = () => {
     Answer_4: '',
     Correct_Answer: '',
     Difficulty_Level: '',
+    Question_Subject: '',
     Image: null 
   });
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
+  const [setQuestionSubject] = useState('');
+  const questionSubjectOptions = {
+    NEET: ['Physics', 'Chemistry', 'Botany', 'Zoology'],
+    JEE: ['Physics', 'Chemistry', 'Maths']
+  };
 
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
@@ -84,24 +90,29 @@ const ExamForm = () => {
   }, [examDetails.No_of_Questions]); 
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    let errorMessage = '';
-    if (name === 'Questions_To_Attend') {
-      const numValue = Number(value);
-      if (numValue > examDetails.No_of_Questions) {
-        errorMessage = 'Questions to attend cannot be more than the total number of questions.';
-      } else if (numValue < 1) {
-        errorMessage = 'Questions to attend cannot be less than 1.';
-      }
-    }
+  const { name, value, type, checked } = e.target;
+  let errorMessage = '';
 
-    setExamDetails({
-      ...examDetails,
-      [name]: value,
-      [name]: type === 'checkbox' ? checked : value,
-    });
-    setError(errorMessage);
-  };
+  if (name === 'Exam_Category') {
+    setQuestionSubject(''); // Reset Question Subject
+  }
+
+  if (name === 'Questions_To_Attend') {
+    const numValue = Number(value);
+    if (numValue > examDetails.No_of_Questions) {
+      errorMessage = 'Questions to attend cannot be more than the total number of questions.';
+    } else if (numValue < 1) {
+      errorMessage = 'Questions to attend cannot be less than 1.';
+    }
+  }
+
+  setExamDetails({
+    ...examDetails,
+    [name]: type === 'checkbox' ? checked : value,
+  });
+
+  setError(errorMessage);
+};
 
   useEffect(() => {
     if (examDetails.Exam_Duration && examDetails.Questions_To_Attend) {
@@ -143,6 +154,7 @@ const ExamForm = () => {
         Answer_4: '',
         Correct_Answer: '',
         Difficulty_Level: '',
+        Question_Subject: '',
         Image: null 
       });
     }
@@ -166,6 +178,7 @@ const ExamForm = () => {
       Answer_4: '',
       Correct_Answer: '',
       Difficulty_Level: '',
+      Question_Subject: '',
       Image: null 
     });
     setSelectedQuestionId('');
@@ -240,6 +253,9 @@ const ExamForm = () => {
           formData.append('Answer_4', questionsToSave[i].Answer_4);
           formData.append('Correct_Answer', parseInt(questionsToSave[i].Correct_Answer));
           formData.append('Difficulty_Level', questionsToSave[i].Difficulty_Level);
+          if (questionsToSave[i].Question_Subject) {
+            formData.append('Question_Subject', questionsToSave[i].Question_Subject);
+          }          
           if (questionsToSave[i].Image) {
             formData.append('Image', questionsToSave[i].Image);
           }
@@ -326,8 +342,10 @@ const ExamForm = () => {
                 required
               >
                 <option value="">Select Category</option>
-                <option value="School">School</option>
+                <option value="LowerGrade">Lower Grade</option>
                 <option value="College">College</option>
+                <option value="NEET">NEET</option>
+                <option value="JEE">JEE</option>
                 <option value="Others">Others</option>
               </select>
             </div>
@@ -441,7 +459,7 @@ const ExamForm = () => {
           <Modal.Title>Question Form ({questionIndex + 1} of {examDetails.No_of_Questions})</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <form>
+          <form>            
             <div className="mb-3">
               <label className="form-label fw-bold">Your Question</label>
               <select
@@ -459,6 +477,25 @@ const ExamForm = () => {
                 ))}
               </select>
             </div>
+            {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
+              <div className="mb-3">
+                <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
+                <select
+                  className="form-control"
+                  name="Question_Subject"
+                  value={questionDetails.Question_Subject}
+                  onChange={handleQuestionChange}
+                  //required
+                >
+                  <option value="">Select Subject</option>
+                  {questionSubjectOptions[examDetails.Exam_Category].map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
             <div className="mb-3">
               <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <textarea
@@ -554,7 +591,7 @@ const ExamForm = () => {
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label">Add image</label>
+              <label className="form-label fw-bold">Add image</label>
               <input
                 className="form-control"
                 type="file"

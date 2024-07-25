@@ -196,7 +196,7 @@ const ExamPage = () => {
           ))}
         </Nav>
       </Navbar>
-      <h2 className="text-center">Exam</h2>
+      <h2 className="text-center">{examDetails.Exam_Category}</h2>      
       <Modal show={showStartModal} onHide={() => setShowStartModal(false)} backdrop="static">
         <Modal.Header>
           <Modal.Title>Start Exam</Modal.Title>
@@ -225,12 +225,15 @@ const ExamPage = () => {
               <div>Time Left: {formatTime(timeLeft)}</div>
               <div>Question Time Left: {formatTime(questionTimesLeft[currentQuestionIndex])}</div>
             </div>
+            {currentQuestion.Question_Subject && (
+              <h4 className="text-center">{currentQuestion.Question_Subject}</h4> 
+            )}
             {currentQuestion.Image && (
               <div className="question-image mb-3">
                 <img src={`${apiUrl}/${currentQuestion.Image}`} alt="Question" className="img-fluid" style={{ maxWidth: '300px', maxHeight: '300px' }}/>
               </div>
             )}
-            <h5 className="card-title">{currentQuestion.Question}</h5>
+            <h5 className="card-title">{currentQuestion.Question}</h5>            
             <div className="answers">
               {[currentQuestion.Answer_1, currentQuestion.Answer_2, currentQuestion.Answer_3, currentQuestion.Answer_4].map((answer, index) => (
                 <div className="form-check" key={index}>
