@@ -21,6 +21,7 @@ const EditDetails = () => {
   const [authoredQuestions, setAuthoredQuestions] = useState([]);
   const [error, setError] = useState('');
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
+  const [deletedQuestions, setDeletedQuestions] = useState([]);
   const [setQuestionSubject] = useState('');
   const questionSubjectOptions = {
     NEET: ['Physics', 'Chemistry', 'Botany', 'Zoology'],
@@ -124,24 +125,17 @@ const EditDetails = () => {
     }
   };
 
-  const handleQuestionDelete = async (index) => {
+  const handleQuestionDelete = (index) => {
     const questionId = questions[index].Question_ID;
-    try {
-      await axios.delete(`${apiUrl}/questions/${questionId}`);
-      toast.success('Question deleted successfully');
-  
-      // Update examDetails and questions state
-      setExamDetails(prevDetails => ({
-        ...prevDetails,
-        No_of_Questions: prevDetails.No_of_Questions - 1
-      }));
-  
-      const updatedQuestions = questions.filter((_, i) => i !== index);
-      setQuestions(updatedQuestions);
-    } catch (error) {
-      toast.error('Error deleting question');
-      console.error('Error deleting question:', error);
-    }
+    setDeletedQuestions([...deletedQuestions, questionId]);
+
+    setExamDetails(prevDetails => ({
+      ...prevDetails,
+      No_of_Questions: prevDetails.No_of_Questions - 1
+    }));
+
+    const updatedQuestions = questions.filter((_, i) => i !== index);
+    setQuestions(updatedQuestions);
   };   
 
   const handleQuestionEdit = (index) => {
@@ -195,6 +189,12 @@ const EditDetails = () => {
         Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
       await axios.put(`${apiUrl}/exams/${examId}`, examData);
+
+      // Handle deleted questions
+      for (let i = 0; i < deletedQuestions.length; i++) {
+        await axios.delete(`${apiUrl}/questions/${deletedQuestions[i]}`);
+      }
+
       for (let i = 0; i < questions.length; i++) {
         if (questions[i].Question_ID) {
           // Check if the question already exists and is just being added to the exam
@@ -250,6 +250,12 @@ const EditDetails = () => {
       setQuestions([...questions, ...newQuestions]);
     }
   }, [examDetails.No_of_Questions, questions]);
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setQuestionDetails({});
+    setQuestionIndex(0);
+  };
 
   return (
     <div className="container">
