@@ -101,8 +101,18 @@ const EditDetails = () => {
   };
 
   const handleQuestionChange = (e) => {
-    const { name, value } = e.target;
-    setQuestionDetails({ ...questionDetails, [name]: value });
+    const { name, value, files } = e.target;
+    if (name === 'Image') {
+      setQuestionDetails({
+        ...questionDetails,
+        [name]: files[0] // Save the image file
+      });
+    } else {
+      setQuestionDetails({
+        ...questionDetails,
+        [name]: value,
+      });
+    }
   };
 
   const handleAuthoredQuestionSelect = (e) => {
@@ -120,7 +130,8 @@ const EditDetails = () => {
         Answer_4: '',
         Correct_Answer: '',
         Difficulty_Level: '',
-        Question_Subject: '',        
+        Question_Subject: '', 
+        Image: null        
       });
     }
   };
@@ -175,6 +186,7 @@ const EditDetails = () => {
       Correct_Answer: '',
       Difficulty_Level: '',
       Question_Subject: '',
+      Image: null 
     });
     setSelectedQuestionId('');
     setShowModal(false);
@@ -189,35 +201,89 @@ const EditDetails = () => {
         Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
       await axios.put(`${apiUrl}/exams/${examId}`, examData);
-
+  
       // Handle deleted questions
       for (let i = 0; i < deletedQuestions.length; i++) {
         await axios.delete(`${apiUrl}/questions/${deletedQuestions[i]}`);
       }
-
+  
       for (let i = 0; i < questions.length; i++) {
+        const formData = new FormData();
         if (questions[i].Question_ID) {
-          // Check if the question already exists and is just being added to the exam
           const questionExists = authoredQuestions.find(q => q.Question_ID === questions[i].Question_ID);
           if (questionExists) {
-            // If the question already exists, update its Exam_ID field
             const updatedQuestion = {
               ...questions[i],
-              Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])] // Ensure unique Exam_IDs
+              Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])]
             };
-            await axios.put(`${apiUrl}/questions/${questions[i].Question_ID}`, updatedQuestion);
+            if (questions[i].Image instanceof File) {
+              formData.append('Image', questions[i].Image);
+            }
+            formData.append('Question', updatedQuestion.Question);
+            formData.append('Answer_1', updatedQuestion.Answer_1);
+            formData.append('Answer_2', updatedQuestion.Answer_2);
+            formData.append('Answer_3', updatedQuestion.Answer_3);
+            formData.append('Answer_4', updatedQuestion.Answer_4);
+            formData.append('Correct_Answer', updatedQuestion.Correct_Answer);
+            formData.append('Difficulty_Level', updatedQuestion.Difficulty_Level);
+            formData.append('Exam_ID', examId);
+            formData.append('Author_Id', user.id);
+            if (questions[i].Question_Subject) {
+              formData.append('Question_Subject', questions[i].Question_Subject);
+            }
+  
+            await axios.put(`${apiUrl}/questions/${questions[i].Question_ID}`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
           } else {
-            // Otherwise, update the question normally
-            await axios.put(`${apiUrl}/questions/${questions[i].Question_ID}`, questions[i]);
+            // Handle new questions
+            formData.append('Exam_ID', examId);
+            formData.append('Author_Id', user.id);
+            formData.append('Question', questions[i].Question);
+            formData.append('Answer_1', questions[i].Answer_1);
+            formData.append('Answer_2', questions[i].Answer_2);
+            formData.append('Answer_3', questions[i].Answer_3);
+            formData.append('Answer_4', questions[i].Answer_4);
+            formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));
+            formData.append('Difficulty_Level', questions[i].Difficulty_Level);
+            if (questions[i].Question_Subject) {
+              formData.append('Question_Subject', questions[i].Question_Subject);
+            }
+            if (questions[i].Image) {
+              formData.append('Image', questions[i].Image);
+            }
+  
+            await axios.post(`${apiUrl}/questions`, formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
           }
         } else {
-          const questionData = {
-            Exam_ID: [examId],
-            Author_Id: user.id,
-            ...questions[i],
-            Correct_Answer: parseInt(questions[i].Correct_Answer)
-          };
-          await axios.post(`${apiUrl}/questions`, questionData);
+          // Handle new questions
+          formData.append('Exam_ID', examId);
+          formData.append('Author_Id', user.id);
+          formData.append('Question', questions[i].Question);
+          formData.append('Answer_1', questions[i].Answer_1);
+          formData.append('Answer_2', questions[i].Answer_2);
+          formData.append('Answer_3', questions[i].Answer_3);
+          formData.append('Answer_4', questions[i].Answer_4);
+          formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));
+          formData.append('Difficulty_Level', questions[i].Difficulty_Level);
+          if (questions[i].Question_Subject) {
+            formData.append('Question_Subject', questions[i].Question_Subject);
+          }
+          if (questions[i].Image) {
+            formData.append('Image', questions[i].Image);
+          }
+  
+          await axios.post(`${apiUrl}/questions`, formData, {
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
         }
       }
       toast.success('Exam and questions updated successfully');
@@ -226,7 +292,7 @@ const EditDetails = () => {
       toast.error('Error updating exam and questions');
       console.error('Error updating exam and questions:', error);
     }
-  };
+  };  
 
   useEffect(() => {
     setExamDetails(prevDetails => ({
@@ -246,6 +312,7 @@ const EditDetails = () => {
         Correct_Answer: '',
         Difficulty_Level: '',
         Question_Subject: '',
+        Image: null 
       });
       setQuestions([...questions, ...newQuestions]);
     }
@@ -576,6 +643,15 @@ const EditDetails = () => {
                 <option value="Medium">Medium</option>
                 <option value="Hard">Hard</option>
               </select>
+            </div>
+            <div className="mb-3">
+              <label className="form-label fw-bold">Add image</label>
+              <input
+                className="form-control"
+                type="file"
+                name="Image"                
+                onChange={handleQuestionChange}
+              />
             </div>
             {questionDetails.Image && (
               <div className="question-image mb-3">
