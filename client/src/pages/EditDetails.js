@@ -102,10 +102,13 @@ const EditDetails = () => {
 
   const handleQuestionChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === 'Image') {
+    if (name === 'Image' && files.length > 0) {
+      // Create a URL for the new image file to preview it immediately
+      const imageUrl = URL.createObjectURL(files[0]);
       setQuestionDetails({
         ...questionDetails,
-        [name]: files[0] // Save the image file
+        Image: files[0],
+        ImagePreview: imageUrl, // Add a new property for image preview
       });
     } else {
       setQuestionDetails({
@@ -655,7 +658,12 @@ const EditDetails = () => {
             </div>
             {questionDetails.Image && (
               <div className="question-image mb-3">
-                <img src={`${apiUrl}/${questionDetails.Image}`} alt="Question" className="img-fluid" style={{ maxWidth: '300px', maxHeight: '300px' }}/>
+                <img 
+                  src={questionDetails.ImagePreview || `${apiUrl}/${questionDetails.Image}`} 
+                  alt="Question" 
+                  className="img-fluid" 
+                  style={{ maxWidth: '300px', maxHeight: '300px' }}
+                />
               </div>
             )}
           </form>
