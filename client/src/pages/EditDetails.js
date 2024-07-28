@@ -79,25 +79,40 @@ const EditDetails = () => {
     }
   }, [examDetails.No_of_Questions]);
 
+  const [noOfQuestionsError, setNoOfQuestionsError] = useState('');
+  const [questionsToAttendError, setQuestionsToAttendError] = useState('');
+
   const handleExamChange = (e) => {
     const { name, value, type, checked } = e.target;
-    let errorMessage = '';
 
     if (name === 'Exam_Category') {
       setQuestionSubject(''); // Reset Question Subject
     }
-  
+
     if (name === 'Questions_To_Attend') {
       const numValue = Number(value);
       if (numValue > examDetails.No_of_Questions) {
-        errorMessage = 'Questions to attend cannot be more than the total number of questions.';
+        setQuestionsToAttendError('Questions to attend cannot be more than the total number of questions.');
       } else if (numValue < 1) {
-        errorMessage = 'Questions to attend cannot be less than 1.';
+        setQuestionsToAttendError('Questions to attend cannot be less than 1.');
+      } else {
+        setQuestionsToAttendError(''); // Clear error if validation passes
       }
     }
 
-    setExamDetails({ ...examDetails, [name]: value, [name]: type === 'checkbox' ? checked : value });
-    setError(errorMessage);
+    if (name === 'No_of_Questions') {
+      const numValue = Number(value);
+      if (numValue < 1) {
+        setNoOfQuestionsError('Number of questions cannot be less than 1.');
+      } else {
+        setNoOfQuestionsError(''); // Clear error if validation passes
+      }
+    }
+
+    setExamDetails({
+      ...examDetails,
+      [name]: type === 'checkbox' ? checked : value,
+    });
   };
 
   const handleQuestionChange = (e) => {
@@ -426,7 +441,8 @@ const EditDetails = () => {
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span>
+              </label>
               <input
                 type="number"
                 className="form-control"
@@ -436,19 +452,21 @@ const EditDetails = () => {
                 onChange={handleExamChange}
                 required
               />
+              {noOfQuestionsError && <Alert variant="danger">{noOfQuestionsError}</Alert>}
             </div>
             <div className="mb-3">
-                <label className="form-label fw-bold">Questions To Attend<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="Questions_To_Attend"
-                  placeholder="Enter number of questions to attend"
-                  value={examDetails.Questions_To_Attend}
-                  onChange={handleExamChange}
-                  required
-                />
-                {error && <Alert variant="danger">{error}</Alert>}
+              <label className="form-label fw-bold">Questions To Attend<span style={{ color: 'red' }}>*</span>
+              </label>
+              <input
+                type="number"
+                className="form-control"
+                name="Questions_To_Attend"
+                placeholder="Enter number of questions to attend"
+                value={examDetails.Questions_To_Attend}
+                onChange={handleExamChange}
+                required
+              />
+              {questionsToAttendError && <Alert variant="danger">{questionsToAttendError}</Alert>}
             </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>

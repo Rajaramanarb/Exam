@@ -89,30 +89,41 @@ const ExamForm = () => {
     }
   }, [examDetails.No_of_Questions]); 
 
+  const [noOfQuestionsError, setNoOfQuestionsError] = useState('');
+  const [questionsToAttendError, setQuestionsToAttendError] = useState('');
+
   const handleChange = (e) => {
-  const { name, value, type, checked } = e.target;
-  let errorMessage = '';
+    const { name, value, type, checked } = e.target;
 
-  if (name === 'Exam_Category') {
-    setQuestionSubject(''); // Reset Question Subject
-  }
-
-  if (name === 'Questions_To_Attend') {
-    const numValue = Number(value);
-    if (numValue > examDetails.No_of_Questions) {
-      errorMessage = 'Questions to attend cannot be more than the total number of questions.';
-    } else if (numValue < 1) {
-      errorMessage = 'Questions to attend cannot be less than 1.';
+    if (name === 'Exam_Category') {
+      setQuestionSubject(''); // Reset Question Subject
     }
-  }
 
-  setExamDetails({
-    ...examDetails,
-    [name]: type === 'checkbox' ? checked : value,
-  });
+    if (name === 'Questions_To_Attend') {
+      const numValue = Number(value);
+      if (numValue > examDetails.No_of_Questions) {
+        setQuestionsToAttendError('Questions to attend cannot be more than the total number of questions.');
+      } else if (numValue < 1) {
+        setQuestionsToAttendError('Questions to attend cannot be less than 1.');
+      } else {
+        setQuestionsToAttendError(''); // Clear error if validation passes
+      }
+    }
 
-  setError(errorMessage);
-};
+    if (name === 'No_of_Questions') {
+      const numValue = Number(value);
+      if (numValue < 1) {
+        setNoOfQuestionsError('Number of questions cannot be less than 1.');
+      } else {
+        setNoOfQuestionsError(''); // Clear error if validation passes
+      }
+    }
+
+    setExamDetails({
+      ...examDetails,
+      [name]: type === 'checkbox' ? checked : value,
+    });
+  };
 
   useEffect(() => {
     if (examDetails.Exam_Duration && examDetails.Questions_To_Attend) {
@@ -399,9 +410,11 @@ const ExamForm = () => {
                 <option value="Medium">Medium</option>
                 <option value="Hard">Hard</option>
               </select>
-            </div>
+            </div>            
             <div className="mb-3">
-              <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">
+                Number of Questions<span style={{ color: 'red' }}>*</span>
+              </label>
               <input
                 type="number"
                 className="form-control"
@@ -411,19 +424,22 @@ const ExamForm = () => {
                 onChange={handleChange}
                 required
               />
+              {noOfQuestionsError && <Alert variant="danger">{noOfQuestionsError}</Alert>}
             </div>
             <div className="mb-3">
-                <label className="form-label fw-bold">Questions To Attend<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="Questions_To_Attend"
-                  placeholder="Enter number of questions to attend"
-                  value={examDetails.Questions_To_Attend}
-                  onChange={handleChange}
-                  required
-                />
-                {error && <Alert variant="danger">{error}</Alert>}
+              <label className="form-label fw-bold">
+                Questions To Attend<span style={{ color: 'red' }}>*</span>
+              </label>
+              <input
+                type="number"
+                className="form-control"
+                name="Questions_To_Attend"
+                placeholder="Enter number of questions to attend"
+                value={examDetails.Questions_To_Attend}
+                onChange={handleChange}
+                required
+              />
+              {questionsToAttendError && <Alert variant="danger">{questionsToAttendError}</Alert>}
             </div>
             <div className="mb-3">
               <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
@@ -479,7 +495,7 @@ const ExamForm = () => {
             </div>
             {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
               <div className="mb-3">
-                <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
+                <label className="form-label fw-bold">Question Subject</label>
                 <select
                   className="form-control"
                   name="Question_Subject"
@@ -497,7 +513,7 @@ const ExamForm = () => {
               </div>
             ) : null}
             <div className="mb-3">
-              <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Question</label>
               <textarea
                 type="text"
                 className="form-control"
@@ -509,7 +525,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 1<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Answer 1</label>
               <input
                 type="text"
                 className="form-control"
@@ -521,7 +537,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 2<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Answer 2</label>
               <input
                 type="text"
                 className="form-control"
@@ -533,7 +549,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 3<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Answer 3</label>
               <input
                 type="text"
                 className="form-control"
@@ -545,7 +561,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 4<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Answer 4</label>
               <input
                 type="text"
                 className="form-control"
@@ -557,7 +573,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Correct Answer<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Correct Answer</label>
               <select
                 className="form-control"
                 name="Correct_Answer"
@@ -576,7 +592,7 @@ const ExamForm = () => {
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+              <label className="form-label fw-bold">Difficulty Level</label>
               <select
                 className="form-control"
                 name="Difficulty_Level"
