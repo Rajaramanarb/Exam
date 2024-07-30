@@ -86,7 +86,10 @@ const EditDetails = () => {
     const { name, value, type, checked } = e.target;
 
     if (name === 'Exam_Category') {
-      setQuestionSubject(''); // Reset Question Subject
+      setQuestionDetails(prevDetails => ({
+        ...prevDetails,
+        Question_Subject: ''
+      }));
     }
 
     if (name === 'Questions_To_Attend') {

@@ -94,11 +94,14 @@ const ExamForm = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-
+  
     if (name === 'Exam_Category') {
-      setQuestionSubject(''); // Reset Question Subject
+      setQuestionDetails(prevDetails => ({
+        ...prevDetails,
+        Question_Subject: ''
+      }));
     }
-
+  
     if (name === 'Questions_To_Attend') {
       const numValue = Number(value);
       if (numValue > examDetails.No_of_Questions) {
@@ -109,7 +112,7 @@ const ExamForm = () => {
         setQuestionsToAttendError(''); // Clear error if validation passes
       }
     }
-
+  
     if (name === 'No_of_Questions') {
       const numValue = Number(value);
       if (numValue < 1) {
@@ -118,12 +121,12 @@ const ExamForm = () => {
         setNoOfQuestionsError(''); // Clear error if validation passes
       }
     }
-
+  
     setExamDetails({
       ...examDetails,
       [name]: type === 'checkbox' ? checked : value,
     });
-  };
+  };  
 
   useEffect(() => {
     if (examDetails.Exam_Duration && examDetails.Questions_To_Attend) {

@@ -60,7 +60,7 @@ const Statistics = () => {
 
     return (
       <div key={examResult._id} className="chart-container">
-        <h3 className="chart-title">Exam Id {examResult.Exam_Id}</h3>
+        <h3 className="chart-title">Exam Id: {examResult.Exam_ID}</h3>
         <div className="chart-wrapper">
           <Pie data={data} options={options} />
         </div>
