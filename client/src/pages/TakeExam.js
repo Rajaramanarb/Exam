@@ -37,11 +37,11 @@ const TakeExam = () => {
           fetchRatings(validExams);
         } else {
           console.error('Expected an array but received:', response.data);
-          toast.error('Unexpected data format');
+          //toast.error('Unexpected data format');
         }
       } catch (error) {
         console.error('Error retrieving exams:', error);
-        toast.error('Error retrieving exams');
+        //toast.error('Error retrieving exams');
       }
     };
 
@@ -57,7 +57,7 @@ const TakeExam = () => {
         setRatings(ratingsData);
       } catch (error) {
         console.error('Error retrieving ratings:', error);
-        toast.error('Error retrieving ratings');
+        //toast.error('Error retrieving ratings');
       }
     };
 

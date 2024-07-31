@@ -36,7 +36,7 @@ const EditDetails = () => {
         const response = await axios.get(`${apiUrl}/exams/${examId}`);
         setExamDetails(response.data);
       } catch (error) {
-        toast.error('Error fetching exam details:');
+        //toast.error('Error fetching exam details:');
         console.error('Error fetching exam details:', error);
       }
     };
@@ -46,7 +46,7 @@ const EditDetails = () => {
         const response = await axios.get(`${apiUrl}/questions/${examId}`);
         setQuestions(response.data);
       } catch (error) {
-        toast.error('Error fetching questions');
+        //toast.error('Error fetching questions');
         console.error('Error fetching questions:', error);
       }
     };
@@ -310,7 +310,7 @@ const EditDetails = () => {
       toast.success('Exam and questions updated successfully');
       navigate('/');
     } catch (error) {
-      toast.error('Error updating exam and questions');
+      //toast.error('Error updating exam and questions');
       console.error('Error updating exam and questions:', error);
     }
   };  

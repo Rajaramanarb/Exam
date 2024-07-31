@@ -68,7 +68,7 @@ const ExamPage = () => {
         setCurrentQuestion(selectedQuestions[0]);
       } catch (error) {
         console.error('Error fetching exam details:', error);
-        toast.error('Error fetching exam details');
+        //toast.error('Error fetching exam details');
       }
     };
 
@@ -157,7 +157,7 @@ const ExamPage = () => {
       navigate('/');
     } catch (error) {
       console.error('Error saving exam results:', error);
-      toast.error('Error saving exam results');
+      //toast.error('Error saving exam results');
     }
   };
 

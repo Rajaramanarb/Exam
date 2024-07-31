@@ -182,7 +182,7 @@ const ExamForm = () => {
   const handleQuestionNext = () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
-
+  
     setQuestions(updatedQuestions);
     setQuestionDetails({
       Question: '',
@@ -196,7 +196,7 @@ const ExamForm = () => {
       Image: null 
     });
     setSelectedQuestionId('');
-
+  
     if (questionIndex + 1 === parseInt(examDetails.No_of_Questions)) {
       saveExamAndQuestions(updatedQuestions);
     } else {
@@ -205,8 +205,8 @@ const ExamForm = () => {
         setQuestionDetails(updatedQuestions[questionIndex + 1]);
       }
     }
-  };  
-
+  };
+  
   const handleSave = () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
@@ -233,48 +233,56 @@ const ExamForm = () => {
         Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
   
-      console.log('Exam data to be saved:', examData); // Log exam data
-  
       const examResponse = await axios.post(`${apiUrl}/exams`, examData);
       const examId = examResponse.data.Exam_Id;
   
-      console.log('Exam saved successfully with ID:', examId); // Log successful exam save
+      const totalQuestions = parseInt(examDetails.No_of_Questions);
+      const questionsToSaveFixedLength = [...questionsToSave];
+      while (questionsToSaveFixedLength.length < totalQuestions) {
+        questionsToSaveFixedLength.push({
+          Question: '',
+          Answer_1: '',
+          Answer_2: '',
+          Answer_3: '',
+          Answer_4: '',
+          Correct_Answer: '',
+          Difficulty_Level: '',
+          Question_Subject: '',
+          Image: null
+        });
+      }
   
-      for (let i = 0; i < questionsToSave.length; i++) {
-        console.log(`Processing question ${i + 1} of ${questionsToSave.length}`); // Log question processing
-  
-        if (questionsToSave[i].Question_ID) {
-          const questionExists = authoredQuestions.find(q => q.Question_ID === questionsToSave[i].Question_ID);
+      for (let i = 0; i < questionsToSaveFixedLength.length; i++) {
+        if (questionsToSaveFixedLength[i].Question_ID) {
+          const questionExists = authoredQuestions.find(q => q.Question_ID === questionsToSaveFixedLength[i].Question_ID);
   
           if (questionExists) {
             const updatedQuestion = {
-              ...questionsToSave[i],
-              Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])] // Ensure unique Exam_IDs
+              ...questionsToSaveFixedLength[i],
+              Exam_ID: [...new Set([...questionExists.Exam_ID, parseInt(examId)])]
             };
   
-            console.log('Updating existing question:', updatedQuestion); // Log question update
-  
-            await axios.put(`${apiUrl}/questions/${questionsToSave[i].Question_ID}`, updatedQuestion);
+            await axios.put(`${apiUrl}/questions/${questionsToSaveFixedLength[i].Question_ID}`, updatedQuestion);
           }
         } else {
           const formData = new FormData();
           formData.append('Exam_ID', examId);
           formData.append('Author_Id', user.id);
-          formData.append('Question', questionsToSave[i].Question);
-          formData.append('Answer_1', questionsToSave[i].Answer_1);
-          formData.append('Answer_2', questionsToSave[i].Answer_2);
-          formData.append('Answer_3', questionsToSave[i].Answer_3);
-          formData.append('Answer_4', questionsToSave[i].Answer_4);
-          formData.append('Correct_Answer', parseInt(questionsToSave[i].Correct_Answer));
-          formData.append('Difficulty_Level', questionsToSave[i].Difficulty_Level);
-          if (questionsToSave[i].Question_Subject) {
-            formData.append('Question_Subject', questionsToSave[i].Question_Subject);
-          }          
-          if (questionsToSave[i].Image) {
-            formData.append('Image', questionsToSave[i].Image);
+          formData.append('Question', questionsToSaveFixedLength[i].Question);
+          formData.append('Answer_1', questionsToSaveFixedLength[i].Answer_1);
+          formData.append('Answer_2', questionsToSaveFixedLength[i].Answer_2);
+          formData.append('Answer_3', questionsToSaveFixedLength[i].Answer_3);
+          formData.append('Answer_4', questionsToSaveFixedLength[i].Answer_4);
+          if (questionsToSaveFixedLength[i].Correct_Answer) {
+            formData.append('Correct_Answer', parseInt(questionsToSaveFixedLength[i].Correct_Answer));
           }
-  
-          console.log('Saving new question with image:', formData); // Log new question save
+          formData.append('Difficulty_Level', questionsToSaveFixedLength[i].Difficulty_Level);
+          if (questionsToSaveFixedLength[i].Question_Subject) {
+            formData.append('Question_Subject', questionsToSaveFixedLength[i].Question_Subject);
+          }
+          if (questionsToSaveFixedLength[i].Image) {
+            formData.append('Image', questionsToSaveFixedLength[i].Image);
+          }
   
           await axios.post(`${apiUrl}/questions`, formData, {
             headers: {
@@ -287,10 +295,10 @@ const ExamForm = () => {
       toast.success('Exam and all questions saved successfully');
       navigate('/');
     } catch (error) {
-      console.error('Error details:', error.response ? error.response.data : error.message); // Log detailed error
-      toast.error('Error saving exam or questions');
+      console.error('Error details:', error.response ? error.response.data : error.message);
+      // toast.error('Error saving exam or questions');
     }
-  };
+  };    
 
   return (
   <div>
@@ -498,7 +506,7 @@ const ExamForm = () => {
             </div>
             {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
               <div className="mb-3">
-                <label className="form-label fw-bold">Question Subject</label>
+                <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
                 <select
                   className="form-control"
                   name="Question_Subject"
@@ -516,7 +524,7 @@ const ExamForm = () => {
               </div>
             ) : null}
             <div className="mb-3">
-              <label className="form-label fw-bold">Question</label>
+              <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
               <textarea
                 type="text"
                 className="form-control"
@@ -528,7 +536,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 1</label>
+              <label className="form-label fw-bold">Answer 1<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -540,7 +548,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 2</label>
+              <label className="form-label fw-bold">Answer 2<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -552,7 +560,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 3</label>
+              <label className="form-label fw-bold">Answer 3<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -564,7 +572,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Answer 4</label>
+              <label className="form-label fw-bold">Answer 4<span style={{ color: 'red' }}>*</span></label>
               <input
                 type="text"
                 className="form-control"
@@ -576,7 +584,7 @@ const ExamForm = () => {
               />
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Correct Answer</label>
+              <label className="form-label fw-bold">Correct Answer<span style={{ color: 'red' }}>*</span></label>
               <select
                 className="form-control"
                 name="Correct_Answer"
@@ -595,7 +603,7 @@ const ExamForm = () => {
               </select>
             </div>
             <div className="mb-3">
-              <label className="form-label fw-bold">Difficulty Level</label>
+              <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
               <select
                 className="form-control"
                 name="Difficulty_Level"

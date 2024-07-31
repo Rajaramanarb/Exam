@@ -45,9 +45,16 @@ const HomePage = () => {
               <Dropdown.Toggle variant="btn btn-primary me-2" id="dropdown-basic">
                 Welcome, {user?.firstName || 'Guest'} 
               </Dropdown.Toggle>
+              <SignedIn>
+                <Dropdown.Menu>
+                  <Dropdown.Item href="statistics">Statistics</Dropdown.Item>
+                </Dropdown.Menu>
+              </SignedIn>
+              <SignedOut>
               <Dropdown.Menu>
-                <Dropdown.Item href="statistics">Statistics</Dropdown.Item>
-              </Dropdown.Menu>
+                  <Dropdown.Item onClick={() => alert('Please sign in to see your statistics.')}>Statistics</Dropdown.Item>
+                </Dropdown.Menu>
+              </SignedOut>
             </Dropdown>
             <SignedOut>
               <SignInButton mode='modal' className="btn btn-primary me-2" />
