@@ -17,7 +17,16 @@ const Statistics = () => {
       if (user && user.id) {
         try {
           const response = await axios.get(`${apiUrl}/exam-results/${user.id}`);
-          setExamResults(response.data);
+          const results = response.data;
+
+          for (let result of results) {
+            const questionsResponse = await axios.get(`${apiUrl}/questions/${result.Exam_ID}`);
+            const questions = questionsResponse.data;
+
+            result.Questions = questions;
+          }
+
+          setExamResults(results);
         } catch (error) {
           console.error('Error fetching exam results:', error);
         }
@@ -27,15 +36,41 @@ const Statistics = () => {
     fetchExamResults();
   }, [user]);
 
-  const renderPieChart = (examResult) => {
-    const totalQuestions = examResult.Responses.length;
-    const score = examResult.Score;
+  const calculateStatistics = (examResult) => {
+    const overall = { correct: 0, total: 0 };
+    const difficultyLevels = {
+      easy: { correct: 0, total: 0 },
+      medium: { correct: 0, total: 0 },
+      hard: { correct: 0, total: 0 }
+    };
 
-    const data = {
+    examResult.Responses.forEach(response => {
+      overall.total += 1;
+      if (response.Is_Correct) {
+        overall.correct += 1;
+      }
+
+      const question = examResult.Questions.find(q => q.Question_ID === response.Question_ID);
+      if (question && question.Difficulty_Level) {
+        const level = question.Difficulty_Level.toLowerCase();
+        if (difficultyLevels[level]) {
+          difficultyLevels[level].total += 1;
+          if (response.Is_Correct) {
+            difficultyLevels[level].correct += 1;
+          }
+        }
+      }
+    });
+
+    return { overall, difficultyLevels };
+  };
+
+  const renderPieChart = (data, title, size = 'large') => {
+    const chartData = {
       labels: ['Correct', 'Incorrect'],
       datasets: [
         {
-          data: [score, totalQuestions - score],
+          data: [data.correct, data.total - data.correct],
           backgroundColor: ['#36A2EB', '#FF6384'],
           hoverBackgroundColor: ['#36A2EB', '#FF6384'],
         },
@@ -49,7 +84,7 @@ const Statistics = () => {
             label: function (context) {
               const label = context.label || '';
               const value = context.raw;
-              const percentage = ((value / totalQuestions) * 100).toFixed(2);
+              const percentage = ((value / data.total) * 100).toFixed(2);
               return `${label}: ${value} (${percentage}%)`;
             },
           },
@@ -59,10 +94,10 @@ const Statistics = () => {
     };
 
     return (
-      <div key={examResult._id} className="chart-container">
-        <h3 className="chart-title">Exam Id: {examResult.Exam_ID}</h3>
+      <div className={`chart-container ${size}`} key={title}>
+        <h3 className="chart-title">{title}</h3>
         <div className="chart-wrapper">
-          <Pie data={data} options={options} />
+          <Pie data={chartData} options={options} />
         </div>
       </div>
     );
@@ -76,7 +111,22 @@ const Statistics = () => {
     <div className="statistics-page">
       <h1 className="page-title">Exam Statistics</h1>
       <div className="charts-grid">
-        {examResults.map(renderPieChart)}
+        {examResults.map((examResult) => {
+          const { overall, difficultyLevels } = calculateStatistics(examResult);
+
+          return (
+            <div key={examResult._id} className="exam-card">
+              <div className="overall-chart">
+                {renderPieChart(overall, `Overall Exam (ID: ${examResult.Exam_ID})`)}
+              </div>
+              <div className="difficulty-charts">
+                {difficultyLevels.easy.total > 0 && renderPieChart(difficultyLevels.easy, 'Easy Questions', 'small')}
+                {difficultyLevels.medium.total > 0 && renderPieChart(difficultyLevels.medium, 'Medium Questions', 'small')}
+                {difficultyLevels.hard.total > 0 && renderPieChart(difficultyLevels.hard, 'Hard Questions', 'small')}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
