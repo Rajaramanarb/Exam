@@ -7,14 +7,11 @@ import { Button, Table } from 'react-bootstrap';
 import moment from 'moment';
 import { useUser } from '@clerk/clerk-react';
 
-const TakeExam = () => {
+const TopExams = () => {
   const { user } = useUser();
   const [exams, setExams] = useState([]);
   const [filteredExams, setFilteredExams] = useState([]);
   const [ratings, setRatings] = useState({});
-  const [authorName, setAuthorName] = useState('');
-  const [subject, setSubject] = useState('');
-  const [examCategory, setExamCategory] = useState('');
 
   const navigate = useNavigate();
 
@@ -33,15 +30,12 @@ const TakeExam = () => {
             return !exam.isDeleted && now.isBefore(validUpto) && now.isAfter(publishDate);
           });
           setExams(validExams);
-          setFilteredExams(validExams);
           fetchRatings(validExams);
         } else {
           console.error('Expected an array but received:', response.data);
-          //toast.error('Unexpected data format');
         }
       } catch (error) {
         console.error('Error retrieving exams:', error);
-        //toast.error('Error retrieving exams');
       }
     };
 
@@ -55,32 +49,23 @@ const TakeExam = () => {
           }
         }
         setRatings(ratingsData);
+        sortAndFilterExams(exams, ratingsData);
       } catch (error) {
         console.error('Error retrieving ratings:', error);
-        //toast.error('Error retrieving ratings');
       }
+    };
+
+    const sortAndFilterExams = (exams, ratingsData) => {
+      const sortedExams = exams.sort((a, b) => {
+        const ratingA = ratingsData[a.Exam_Id] || 0;
+        const ratingB = ratingsData[b.Exam_Id] || 0;
+        return ratingB - ratingA; // Sort descending
+      });
+      setFilteredExams(sortedExams);
     };
 
     fetchExams();
   }, [apiUrl]);
-
-  useEffect(() => {
-    filterExams();
-  }, [authorName, subject, examCategory]);
-
-  const filterExams = () => {
-    let filtered = exams;
-    if (authorName) {
-      filtered = filtered.filter(exam => exam.Author_Name === authorName);
-    }
-    if (subject) {
-      filtered = filtered.filter(exam => exam.Subject === subject);
-    }
-    if (examCategory) {
-      filtered = filtered.filter(exam => exam.Exam_Category === examCategory);
-    }
-    setFilteredExams(filtered);
-  };
 
   const handleTakeExam = (exam) => {
     navigate(`/take-exam/${exam.Exam_Id}`, {
@@ -94,72 +79,31 @@ const TakeExam = () => {
 
   return (
    <div>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <a class="navbar-brand" href="/">Home</a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a className="navbar-brand" href="/">Home</a>
+          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
           </button>
 
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-          <ul class="navbar-nav mr-auto">
-            <li class="nav-item">
-              <a class="nav-link" href="/ExamForm">Host Exam</a>
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav mr-auto">
+            <li className="nav-item">
+              <a className="nav-link" href="/ExamForm">Host Exam</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/HostedExam">My Exam <span class="sr-only">(current)</span></a>
+            <li className="nav-item">
+              <a className="nav-link" href="/HostedExam">My Exam <span className="sr-only">(current)</span></a>
             </li>
           </ul>
 
-          <div class="collapse navbar-collapse justify-content-end">
-            <span class="navbar-text">
+          <div className="collapse navbar-collapse justify-content-end">
+            <span className="navbar-text">
               Welcome, {user?.firstName || 'Guest'} 
             </span>
           </div>
         </div>
       </nav>
     <div className="container">
-      <h2>Available Exams</h2>
-      <div className="d-flex justify-content-between mb-3">
-        <div className="flex-fill me-2">
-          <label className="form-label fw-bold">Author Name</label>
-          <select
-            className="form-control"
-            value={authorName}
-            onChange={e => setAuthorName(e.target.value)}
-          >
-            <option value="">All</option>
-            {[...new Set(exams.map(exam => exam.Author_Name))].map(name => (
-              <option key={name} value={name}>{name}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-fill me-2">
-          <label className="form-label fw-bold">Subject</label>
-          <select
-            className="form-control"
-            value={subject}
-            onChange={e => setSubject(e.target.value)}
-          >
-            <option value="">All</option>
-            {[...new Set(exams.map(exam => exam.Subject))].map(sub => (
-              <option key={sub} value={sub}>{sub}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex-fill">
-          <label className="form-label fw-bold">Exam Category</label>
-          <select
-            className="form-control"
-            value={examCategory}
-            onChange={e => setExamCategory(e.target.value)}
-          >
-            <option value="">All</option>
-            {[...new Set(exams.map(exam => exam.Exam_Category))].map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <h2>Top Rated Exams</h2>
       <Table className="table table-hover">
         <thead className="thead-dark">
           <tr>
@@ -208,7 +152,7 @@ const TakeExam = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="7" className="text-center">No exams available.</td>
+              <td colSpan="8" className="text-center">No exams available.</td>
             </tr>
           )}
         </tbody>
@@ -218,4 +162,4 @@ const TakeExam = () => {
   );
 };
 
-export default TakeExam;
+export default TopExams;

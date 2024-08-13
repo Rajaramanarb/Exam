@@ -76,6 +76,31 @@ const ExamPage = () => {
   }, [examId, apiUrl]);
 
   useEffect(() => {
+    const fetchExamResult = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/exam-results/${user.id}`);
+        const results = response.data;
+
+        // Find the previous result for the current exam
+        const previousResult = results.find(result => result.Exam_ID === parseInt(examId));
+
+        if (previousResult) {
+          setRating(previousResult.Rating);  // Set the rating from the previous result
+        } else {
+          console.log("No previous rating found.");
+        }
+      } catch (error) {
+        console.error('Error fetching previous exam results:', error);
+        // toast.error('Error fetching previous exam results');
+      }
+    };
+
+    if (user.id) {
+      fetchExamResult();
+    }
+  }, [user.id, examId, apiUrl]);
+
+  useEffect(() => {
     if (timeLeft === 0) {
       finishExam();
     } else if (timeLeft !== null) {
@@ -214,7 +239,7 @@ const ExamPage = () => {
           <b>Are you ready to start the exam?</b>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => navigate('/TakeExam')}>No</Button>
+          <Button variant="secondary" onClick={() => navigate(-1)}>No</Button>
           <Button variant="primary" onClick={handleStartExam}>Yes</Button>
         </Modal.Footer>
       </Modal>

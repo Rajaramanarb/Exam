@@ -74,10 +74,12 @@ const HomePage = () => {
             <SignedIn>
               <li className="list-group-item"><Link to="/TakeExam">Take an Exam</Link></li>
               <li className="list-group-item"><Link to="/ExamForm">Host an Exam</Link></li>
+              <li className="list-group-item"><Link to="/TopExams">Top Exams</Link></li>
             </SignedIn>
             <SignedOut>
               <li className="list-group-item" onClick={() => alert('Please sign in to take an exam.')}>Take an Exam</li>
               <li className="list-group-item" onClick={() => alert('Please sign in to host an exam.')}>Host an Exam</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to see Top Exams.')}>Top Exams</li>
             </SignedOut>
           </ul>
           <div className="mt-3">
@@ -98,9 +100,11 @@ const HomePage = () => {
           <ul className="list-group">
             <SignedIn>
               <li className="list-group-item"><Link to="/HostedExam">My Exams</Link></li>
+              <li className="list-group-item"><Link to="/RateExam">Rate Exam</Link></li>
             </SignedIn>
             <SignedOut>
               <li className="list-group-item" onClick={() => alert('Please sign in to see my exams.')}>My Exams</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to rate exam.')}>Rate Exam</li>
             </SignedOut>
           </ul>
           <div className="mt-3">

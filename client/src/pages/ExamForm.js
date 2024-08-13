@@ -25,7 +25,8 @@ const ExamForm = () => {
     Exam_Valid_Upto: '',
     Questions_To_Attend: '',
     Publish_Date: '',
-    Negative_Marking: false
+    Negative_Marking: false,
+    isDeleted: false
   });
 
   const [authoredQuestions, setAuthoredQuestions] = useState([]);

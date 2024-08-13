@@ -7,6 +7,8 @@ import ExamPage from './pages/ExamPage';
 import HostedExam from './pages/HostedExam';
 import Statistics from './pages/Statistics';
 import EditDetails from './pages/EditDetails';
+import TopExams from './pages/TopExams';
+import RateExam from './pages/RateExam';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -23,6 +25,8 @@ const App = () => {
           <Route path="statistics" element={<Statistics />} />
           <Route path="HostedExam" element={<HostedExam />} />
           <Route path="/EditDetails/:examId" element={<EditDetails />} />
+          <Route path="TopExams" element={<TopExams />} />
+          <Route path="RateExam" element={<RateExam />} />
         </Route>
       </Routes>
       <hr />

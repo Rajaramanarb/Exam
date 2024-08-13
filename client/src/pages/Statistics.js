@@ -108,25 +108,50 @@ const Statistics = () => {
   }
 
   return (
-    <div className="statistics-page">
-      <h1 className="page-title">Exam Statistics</h1>
-      <div className="charts-grid">
-        {examResults.map((examResult) => {
-          const { overall, difficultyLevels } = calculateStatistics(examResult);
+    <div>
+      <nav className="navbar navbar-expand-lg navbar-light bg-light">
+        <a className="navbar-brand" href="/">Home</a>
+          <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span className="navbar-toggler-icon"></span>
+          </button>
 
-          return (
-            <div key={examResult._id} className="exam-card">
-              <div className="overall-chart">
-                {renderPieChart(overall, `Overall Exam (ID: ${examResult.Exam_ID})`)}
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul className="navbar-nav mr-auto">
+            <li className="nav-item">
+              <a className="nav-link" href="/TakeExam">Take Exam</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link" href="/HostedExam">My Exam <span className="sr-only">(current)</span></a>
+            </li>
+          </ul>
+
+          <div className="collapse navbar-collapse justify-content-end">
+            <span className="navbar-text">
+              Welcome, {user?.firstName || 'Guest'} 
+            </span>
+          </div>
+        </div>
+      </nav>
+      <div className="statistics-page">
+        <h1 className="page-title">Exam Statistics</h1>
+        <div className="charts-grid">
+          {examResults.map((examResult) => {
+            const { overall, difficultyLevels } = calculateStatistics(examResult);
+
+            return (
+              <div key={examResult._id} className="exam-card">
+                <div className="overall-chart">
+                  {renderPieChart(overall, `Overall Exam (ID: ${examResult.Exam_ID})`)}
+                </div>
+                <div className="difficulty-charts">
+                  {difficultyLevels.easy.total > 0 && renderPieChart(difficultyLevels.easy, 'Easy Questions', 'small')}
+                  {difficultyLevels.medium.total > 0 && renderPieChart(difficultyLevels.medium, 'Medium Questions', 'small')}
+                  {difficultyLevels.hard.total > 0 && renderPieChart(difficultyLevels.hard, 'Hard Questions', 'small')}
+                </div>
               </div>
-              <div className="difficulty-charts">
-                {difficultyLevels.easy.total > 0 && renderPieChart(difficultyLevels.easy, 'Easy Questions', 'small')}
-                {difficultyLevels.medium.total > 0 && renderPieChart(difficultyLevels.medium, 'Medium Questions', 'small')}
-                {difficultyLevels.hard.total > 0 && renderPieChart(difficultyLevels.hard, 'Hard Questions', 'small')}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
     </div>
   );

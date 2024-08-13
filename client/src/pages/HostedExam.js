@@ -5,6 +5,8 @@ import { Table, Button } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const HostedExam = () => {
   const { user } = useUser();
@@ -42,6 +44,48 @@ const HostedExam = () => {
     }
   }, [user]);
 
+  const handleDelete = async (index) => {
+    const examToDelete = exams[index];
+  
+    try {
+      const response = await axios.put(`${apiUrl}/exams/${examToDelete.Exam_Id}`, { isDeleted: true });
+  
+      if (response.status === 200) {
+        toast.success('Exam deleted successfully.');
+        
+        // Update the local state
+        const updatedExams = [...exams];
+        updatedExams[index].isDeleted = true;
+        setExams(updatedExams);
+      } else {
+        console.error('Failed to delete the exam.');
+      }
+    } catch (error) {
+      console.error('Error deleting exam:', error);
+    }
+  };
+  
+  const handleReactivate = async (index) => {
+    const examToReactivate = exams[index];
+  
+    try {
+      const response = await axios.put(`${apiUrl}/exams/${examToReactivate.Exam_Id}`, { isDeleted: false });
+  
+      if (response.status === 200) {
+        toast.success('Exam re-activated successfully.');
+        
+        // Update the local state
+        const updatedExams = [...exams];
+        updatedExams[index].isDeleted = false;
+        setExams(updatedExams);
+      } else {
+        console.error('Failed to re-activate the exam.');
+      }
+    } catch (error) {
+      console.error('Error re-activating exam:', error);
+    }
+  };  
+  
   const handleEdit = (examId) => {
     navigate(`/EditDetails/${examId}`);
   };
@@ -115,12 +159,13 @@ const HostedExam = () => {
               </td>
               <td>
                 {editableExams[exam.Exam_Id] && (
-                  <Button
-                    variant="warning"
-                    onClick={() => handleEdit(exam.Exam_Id)}
-                  >
-                    ✏️ Edit
-                  </Button>
+                  <Button variant="warning" className="me-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
+                )}
+
+                {exam.isDeleted === false ? (
+                  <Button variant="danger" onClick={() => handleDelete(index)}>🗑️ Delete</Button>
+                ) : (
+                  <Button variant="primary" onClick={() => handleReactivate(index)}>🚀 Re-activate</Button>
                 )}
               </td>
             </tr>
