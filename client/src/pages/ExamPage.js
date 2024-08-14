@@ -202,9 +202,18 @@ const ExamPage = () => {
     setCurrentQuestion(questions[index]);
   };
 
-  const handleRatingChange = (newRating) => {
-    setRating(newRating);
-  };
+  const handleRatingChange = async (newRating) => {
+    try {
+      if (newRating < 1 || newRating > 5 || !Number.isInteger(newRating)) {
+        toast.error('Invalid rating. Rating must be an integer between 1 and 5.');
+        return;
+      }
+      setRating(newRating); 
+      const response = await axios.put(`${apiUrl}/exam-results/${examId}/${user.id}`, { Rating: newRating });
+    } catch (error) {
+      console.error('Error updating rating:', error);
+    }
+  };  
 
   return (
     <div className="container mt-5">

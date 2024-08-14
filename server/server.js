@@ -403,9 +403,28 @@ router.get('/rating/:examId', async (req, res) => {
     const { examId } = req.params;
     const result = await Exam_Result.aggregate([
       { $match: { Exam_ID: Number(examId) } },
-      { $group: { _id: '$Exam_Id', averageRating: { $avg: '$Rating' } } }
+      { $sort: { Author_Id: 1, _id: -1 } },
+      { 
+        $group: {
+          _id: '$Author_Id', 
+          latestRating: { $first: '$Rating' } 
+        }
+      },
+      
+      { 
+        $group: {
+          _id: null, 
+          averageRating: { $avg: '$latestRating' }
+        }
+      }
     ]);
-    res.json(result);
+
+    if (result.length > 0) {
+      res.json({ averageRating: result[0].averageRating });
+    } else {
+      res.json({ averageRating: 0 });
+    }
+
   } catch (error) {
     console.error('Error fetching exam results:', error);
     res.status(500).send('Error fetching exam results');
@@ -424,6 +443,32 @@ router.get('/hosted-exams/:authorId', async (req, res) => {
     res.status(200).json(exams);
   } catch (error) {
     console.error('Error fetching exams:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.put('/exam-results/:examId/:authorId', async (req, res) => {
+  try {
+    const { examId, authorId } = req.params; 
+    const { Rating } = req.body; 
+
+    if (Rating < 1 || Rating > 5 || !Number.isInteger(Rating)) {
+      return res.status(400).json({ error: 'Invalid rating. Rating must be an integer between 1 and 5.' });
+    }
+
+    const result = await Exam_Result.updateMany(
+      { Exam_ID: Number(examId), Author_Id: authorId }, 
+      { $set: { Rating } },
+      { new: true }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ error: 'Exam result not found' });
+    }
+
+    res.status(200).json({ message: 'Rating updated successfully', result });
+  } catch (error) {
+    console.error('Error updating rating:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

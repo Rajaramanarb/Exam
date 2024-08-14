@@ -71,7 +71,11 @@ const RateExam = () => {
       console.error('Error updating rating:', error);
       toast.error('Error updating rating.');
     }
-  };  
+  }; 
+  
+  const handleCancelEdit = () => {
+    setEditingRating(null);
+  };
 
   return (
     <div>
@@ -152,13 +156,16 @@ const RateExam = () => {
                 `${exam.Rating} / 5`
               )}
             </td>
-              <td>
-                {editingRating === exam.Exam_ID ? (
-                  <Button variant="success" onClick={() => handleSaveRating(exam.Exam_ID)}>Save</Button>
-                ) : (
-                  <Button variant="primary" className="me-2" onClick={() => handleEdit(exam.Exam_ID)}>Rate Exam</Button>
-                )}
-              </td>
+            <td>
+                  {editingRating === exam.Exam_ID ? (
+                    <>
+                      <Button variant="success" onClick={() => handleSaveRating(exam.Exam_ID)} className="me-2">Save</Button>
+                      <Button variant="danger" onClick={handleCancelEdit}>Cancel</Button>
+                    </>
+                  ) : (
+                    <Button variant="primary" className="me-2" onClick={() => handleEdit(exam.Exam_ID)}>Rate Exam</Button>
+                  )}
+            </td>
             </tr>
           ))}
         </tbody>

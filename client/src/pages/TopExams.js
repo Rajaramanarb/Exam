@@ -44,8 +44,8 @@ const TopExams = () => {
         const ratingsData = {};
         for (const exam of exams) {
           const ratingResponse = await axios.get(`${apiUrl}/rating/${exam.Exam_Id}`);
-          if (ratingResponse.data.length > 0) {
-            ratingsData[exam.Exam_Id] = ratingResponse.data[0].averageRating;
+          if (ratingResponse.data && ratingResponse.data.averageRating !== undefined) {
+            ratingsData[exam.Exam_Id] = ratingResponse.data.averageRating;
           }
         }
         setRatings(ratingsData);
@@ -126,7 +126,13 @@ const TopExams = () => {
                 <td>{exam.Subject}</td>
                 <td>{exam.Exam_Category}</td>
                 <td>{exam.Author_Name}</td>
-                <td>{ratings[exam.Exam_Id]?.toFixed(1) || 'N/A'} of 5</td>
+                <td>
+                  {ratings[exam.Exam_Id] !== undefined 
+                    ? Number.isInteger(ratings[exam.Exam_Id])
+                      ? `${ratings[exam.Exam_Id]} of 5`
+                      : `${ratings[exam.Exam_Id].toFixed(1)} of 5`
+                    : 'N/A'}
+                </td>
                 <td>
                   <span className={`text fw-bold ${
                     exam.Difficulty_Level === 'Easy'
