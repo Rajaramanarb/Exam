@@ -172,7 +172,10 @@ const ExamPage = () => {
     setShowScoreModal(true);
   };
 
+  const [loading, setLoading] = useState(false);
+
   const finishExam = async () => {
+    setLoading(true);
     const examResult = { ...examResultBuffer, Rating: rating };
 
     try {
@@ -183,6 +186,8 @@ const ExamPage = () => {
     } catch (error) {
       console.error('Error saving exam results:', error);
       //toast.error('Error saving exam results');
+    } finally {
+      setLoading(false); // Re-enable the button after response
     }
   };
 
@@ -326,7 +331,9 @@ const ExamPage = () => {
           </div>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="primary" onClick={finishExam}>Finish Exam</Button>
+        <Button variant="primary" onClick={finishExam} disabled={loading}>
+          {loading ? 'Finishing...' : 'Finish Exam'} 
+        </Button>
         </Modal.Footer>
       </Modal>
     </div>

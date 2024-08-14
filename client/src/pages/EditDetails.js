@@ -55,7 +55,8 @@ const EditDetails = () => {
       try {
         if (user && user.id) {
           const response = await axios.get(`${apiUrl}/author-questions/${user.id}`);
-          setAuthoredQuestions(response.data);
+          const filteredQuestions = response.data.filter(q => q.Question && q.Question.trim() !== '');
+          setAuthoredQuestions(filteredQuestions);
         }
       } catch (error) {
         //toast.error('Error fetching authored questions');
@@ -268,8 +269,11 @@ const EditDetails = () => {
     }, 300);
   };  
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleExamSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
       const examData = {
         ...examDetails,
@@ -367,6 +371,8 @@ const EditDetails = () => {
     } catch (error) {
       //toast.error('Error updating exam and questions');
       console.error('Error updating exam and questions:', error);
+    } finally {
+      setIsSubmitting(false); // Re-enable the button after request completion
     }
   };  
 
@@ -575,7 +581,9 @@ const EditDetails = () => {
             </div>
           </div>
           <div className="text-center">
-            <button type="submit" className="btn btn-primary">Update</button>
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Updating...' : 'Update'}
+          </button>
           </div>
         </form>
 

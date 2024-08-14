@@ -59,7 +59,8 @@ const ExamForm = () => {
       try {
         if (user && user.id) {
           const response = await axios.get(`${apiUrl}/author-questions/${user.id}`);
-          setAuthoredQuestions(response.data);
+          const filteredQuestions = response.data.filter(q => q.Question && q.Question.trim() !== '');
+          setAuthoredQuestions(filteredQuestions);
         }
       } catch (error) {
         console.error('Error fetching authored questions:', error);
@@ -180,10 +181,12 @@ const ExamForm = () => {
     setShowModal(true);
   };
 
-  const handleQuestionNext = () => {
+  const [loading, setLoading] = useState(false);
+
+  const handleQuestionNext = async () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
-  
+
     setQuestions(updatedQuestions);
     setQuestionDetails({
       Question: '',
@@ -194,12 +197,17 @@ const ExamForm = () => {
       Correct_Answer: '',
       Difficulty_Level: '',
       Question_Subject: '',
-      Image: null 
+      Image: null,
     });
     setSelectedQuestionId('');
-  
+
     if (questionIndex + 1 === parseInt(examDetails.No_of_Questions)) {
-      saveExamAndQuestions(updatedQuestions);
+      setLoading(true); // Disable the button
+      try {
+        await saveExamAndQuestions(updatedQuestions);
+      } finally {
+        setLoading(false); // Re-enable the button
+      }
     } else {
       setQuestionIndex(questionIndex + 1);
       if (updatedQuestions[questionIndex + 1]) {
@@ -207,14 +215,26 @@ const ExamForm = () => {
       }
     }
   };
+
+  const [isSaving, setIsSaving] = useState(false);
   
-  const handleSave = () => {
+  const handleSave = async () => {
+    setIsSaving(true); // Disable the button
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
   
     setQuestions(updatedQuestions);
-    saveExamAndQuestions(updatedQuestions);
-  };  
+
+    try {
+      await saveExamAndQuestions(updatedQuestions);
+      // Handle success if needed
+    } catch (error) {
+      // Handle error if needed
+      console.error('Error saving questions:', error);
+    } finally {
+      setIsSaving(false); // Re-enable the button
+    }
+  };
 
   const handleQuestionPrevious = () => {
     const updatedQuestions = [...questions];
@@ -636,12 +656,12 @@ const ExamForm = () => {
               Previous
             </Button>
           )}
-          <Button variant="primary" onClick={handleQuestionNext}>
-            {questionIndex + 1 === parseInt(examDetails.No_of_Questions) ? 'Finish' : 'Next'}
+          <Button variant="primary" onClick={handleQuestionNext} disabled={loading}>
+            {questionIndex + 1 === parseInt(examDetails.No_of_Questions) ? (loading ? 'Submitting...' : 'Finish') : 'Next'}
           </Button>
           {questionIndex + 1 !== parseInt(examDetails.No_of_Questions) && (
-            <Button variant="success" onClick={handleSave}>
-              Save
+            <Button variant="success" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Saving...' : 'Save'}
             </Button>
           )}          
         </Modal.Footer>
