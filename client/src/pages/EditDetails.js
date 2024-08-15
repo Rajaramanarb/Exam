@@ -563,7 +563,10 @@ const EditDetails = () => {
                   className="form-control"
                   name="Exam_Valid_Upto"
                   value={moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DDTHH:mm')}
-                  onChange={handleExamChange}
+                  onChange={(e) => {
+                    handleExamChange(e);
+                    e.target.blur(); // Force the calendar to close after selection
+                  }}
                   required
                 />
               </div>
@@ -574,7 +577,10 @@ const EditDetails = () => {
                     className="form-control"
                     name="Publish_Date"
                     value={moment(examDetails.Publish_Date).format('YYYY-MM-DDTHH:mm')}
-                    onChange={handleExamChange}
+                    onChange={(e) => {
+                      handleExamChange(e);
+                      e.target.blur(); // Force the calendar to close after selection
+                    }}
                     required
                   />
               </div>
@@ -670,7 +676,7 @@ const EditDetails = () => {
                   value={questionDetails.Question}
                   onChange={handleQuestionChange}
                   rows="3"
-                  required
+                  //required
                 />
               </div>
               <div className="mb-3">
@@ -682,7 +688,7 @@ const EditDetails = () => {
                   placeholder="Enter answer 1"
                   value={questionDetails.Answer_1}
                   onChange={handleQuestionChange}
-                  required
+                  //required
                 />
               </div>
               <div className="mb-3">
@@ -694,7 +700,7 @@ const EditDetails = () => {
                   placeholder="Enter answer 2" 
                   value={questionDetails.Answer_2}
                   onChange={handleQuestionChange}
-                  required
+                  //required
                 />
               </div>
               <div className="mb-3">
@@ -706,7 +712,7 @@ const EditDetails = () => {
                   placeholder="Enter answer 3" 
                   value={questionDetails.Answer_3}
                   onChange={handleQuestionChange}
-                  required
+                  //required
                 />
               </div>
               <div className="mb-3">
@@ -718,7 +724,7 @@ const EditDetails = () => {
                   placeholder="Enter answer 4" 
                   value={questionDetails.Answer_4}
                   onChange={handleQuestionChange}
-                  required
+                  //required
                 />
               </div>
               <div className="mb-3">
@@ -731,7 +737,7 @@ const EditDetails = () => {
                     ...questionDetails,
                     Correct_Answer: parseInt(e.target.value) // Convert to number
                   })}
-                  required
+                  //required
                 >
                   <option value="">Select Correct Answer</option>
                   <option value="1">Answer 1</option>
@@ -747,7 +753,7 @@ const EditDetails = () => {
                   name="Difficulty_Level"
                   value={questionDetails.Difficulty_Level}
                   onChange={handleQuestionChange}
-                  required
+                  //required
                 >
                   <option value="">Select Difficulty Level</option>
                   <option value="Easy">Easy</option>

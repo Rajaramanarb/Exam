@@ -480,7 +480,10 @@ const ExamForm = () => {
                 className="form-control"
                 name="Exam_Valid_Upto"
                 value={examDetails.Exam_Valid_Upto}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  e.target.blur(); // Force the calendar to close after selection
+                }}
                 required
               />
             </div>
@@ -491,7 +494,10 @@ const ExamForm = () => {
                   className="form-control"
                   name="Publish_Date"
                   value={examDetails.Publish_Date}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                  handleChange(e);
+                  e.target.blur(); // Force the calendar to close after selection
+                  }}
                   required
                 />
             </div>
