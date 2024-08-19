@@ -25,23 +25,36 @@ const TakeExam = () => {
       try {
         const response = await axios.get(`${apiUrl}/exams`);
         if (Array.isArray(response.data)) {
-          const validExams = response.data.filter(exam => {
+          const validExams = await Promise.all(response.data.map(async (exam) => {
             const now = moment();
             const validUpto = moment(exam.Exam_Valid_Upto, "YYYY-MM-DD hh:mm A");
             const publishDate = moment(exam.Publish_Date, "YYYY-MM-DD hh:mm A");
+            const isReady = await checkExamReadiness(exam.Exam_Id, exam.No_of_Questions);
           
-            return !exam.isDeleted && now.isBefore(validUpto) && now.isAfter(publishDate);
-          });
-          setExams(validExams);
-          setFilteredExams(validExams);
-          fetchRatings(validExams);
+            return !exam.isDeleted && now.isBefore(validUpto) && now.isAfter(publishDate) && isReady ? exam : null;
+          }));
+    
+          const filteredValidExams = validExams.filter(exam => exam !== null);
+          setExams(filteredValidExams);
+          setFilteredExams(filteredValidExams);
+          fetchRatings(filteredValidExams);
         } else {
           console.error('Expected an array but received:', response.data);
           //toast.error('Unexpected data format');
         }
       } catch (error) {
         console.error('Error retrieving exams:', error);
-        //toast.error('Error retrieving exams');
+      }
+    };    
+
+    const checkExamReadiness = async (examId, noOfQuestions) => {
+      try {
+        const response = await axios.get(`${apiUrl}/valid-questions/${examId}`);
+        const questionCount = response.data;
+        return questionCount === noOfQuestions;
+      } catch (error) {
+        console.error(`Error checking exam readiness for Exam ID ${examId}:`, error);
+        return false;
       }
     };
 

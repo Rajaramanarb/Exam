@@ -473,6 +473,28 @@ router.put('/exam-results/:examId/:authorId', async (req, res) => {
   }
 });
 
+router.get('/valid-questions/:examId', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    
+    // Query to count only the documents where all the required fields are present
+    const questionCount = await Question_Master.countDocuments({
+      Exam_ID: examId,
+      Question: { $exists: true, $ne: '' },
+      Answer_1: { $exists: true, $ne: '' },
+      Answer_2: { $exists: true, $ne: '' },
+      Answer_3: { $exists: true, $ne: '' },
+      Answer_4: { $exists: true, $ne: '' },
+      Correct_Answer: { $exists: true, $gte: 1, $lte: 4 }
+    });
+
+    res.json(questionCount);
+  } catch (error) {
+    console.error('Error fetching question:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 app.use('/', router);
 
 app.listen(PORT, () => {

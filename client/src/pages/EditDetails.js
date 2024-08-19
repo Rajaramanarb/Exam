@@ -473,7 +473,11 @@ const EditDetails = () => {
                   <option value="LowerGrade">Lower Grade</option>
                   <option value="College">College</option>
                   <option value="NEET">NEET</option>
-                  <option value="JEE">JEE</option>
+                  <option value="NEET_Chapterwise">NEET Chapterwise</option>
+                  <option value="NEET_Questionwise">NEET Questionwise</option>
+                  <option value="JEE">JEE</option>                
+                  <option value="JEE_Chapterwise">JEE Chapterwise</option>
+                  <option value="JEE_Questionwise">JEE Questionwise</option>
                   <option value="Others">Others</option>
                 </select>
               </div>

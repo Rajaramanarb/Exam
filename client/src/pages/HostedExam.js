@@ -19,8 +19,16 @@ const HostedExam = () => {
     const fetchExams = async () => {
       try {
         const response = await axios.get(`${apiUrl}/hosted-exams/${user.id}`);
-        setExams(response.data);
-        fetchEditStatus(response.data);
+        const examsData = response.data;
+    
+        // Check readiness for each exam
+        const updatedExams = await Promise.all(examsData.map(async (exam) => {
+          const isReady = await checkExamReadiness(exam.Exam_Id, exam.No_of_Questions);
+          return { ...exam, isReady };
+        }));
+    
+        setExams(updatedExams);
+        fetchEditStatus(updatedExams);
       } catch (error) {
         console.error('Error fetching exams:', error);
       }
@@ -43,6 +51,17 @@ const HostedExam = () => {
       fetchExams();
     }
   }, [user]);
+
+    const checkExamReadiness = async (examId, noOfQuestions) => {
+      try {
+        const response = await axios.get(`${apiUrl}/valid-questions/${examId}`);
+        const questionCount = response.data;
+        return questionCount === noOfQuestions;
+      } catch (error) {
+        console.error(`Error checking exam readiness for Exam ID ${examId}:`, error);
+        return false;
+      }
+    };
 
   const handleDelete = async (index) => {
     const examToDelete = exams[index];
@@ -125,9 +144,10 @@ const HostedExam = () => {
             <th>Description</th>
             <th>Subject</th>
             <th>Exam Category</th>
-            <th>Difficulty Level</th>
+            {/* <th>Difficulty Level</th> */}
             <th>Published On</th>
             <th>Valid Upto</th>
+            <th>Filled</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -138,7 +158,7 @@ const HostedExam = () => {
               <td>{exam.Exam_Desc}</td>
               <td>{exam.Subject}</td>
               <td>{exam.Exam_Category}</td>
-              <td>
+              {/* <td>
                 <span className={`text fw-bold ${
                   exam.Difficulty_Level === 'Easy'
                     ? 'text-success'
@@ -150,11 +170,22 @@ const HostedExam = () => {
                 }`}>
                   {exam.Difficulty_Level}
                 </span>
-              </td>
+              </td> */}
               <td>{moment(exam.Publish_Date).format('YYYY-MM-DD hh:mm A')}</td>
               <td>
                 <span className={`text fw-bold ${moment().isAfter(moment(exam.Exam_Valid_Upto)) ? 'text-danger' : 'text-success'}`}>
                   {moment(exam.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')}
+                </span>
+              </td>              
+              <td>
+                <span
+                  className={`text fw-bold ${
+                    exam.isReady
+                      ? 'text-success' // Green color for true
+                      : 'text-danger'  // Red color for false
+                  }`}
+                >
+                  {exam.isReady ? 'Ready' : 'Pending'}
                 </span>
               </td>
               <td>
