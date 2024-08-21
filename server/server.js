@@ -10,6 +10,8 @@ const AutoIncrement = require('mongoose-sequence')(mongoose);
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const { title } = require('process');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const router = express.Router();
@@ -34,6 +36,24 @@ const upload = multer({ storage: storage });
 app.use(cors());
 app.use(bodyParser.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+const adDir = path.join(__dirname, 'advertisements');
+if (!fs.existsSync(adDir)) {
+  fs.mkdirSync(adDir);
+}
+
+const adStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'advertisements/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
+});
+
+const adUpload = multer({ storage: adStorage });
+app.use('/advertisements', express.static(path.join(__dirname, 'advertisements')));
+
 
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
@@ -77,6 +97,14 @@ const LicenseSchema = new mongoose.Schema({
 });
 
 const License = mongoose.model('License', LicenseSchema);
+
+const MainContentSchema = new mongoose.Schema({
+  title: String,
+  text: String,
+  version: { type: Number, default: 1 },
+});
+
+const MainContent = mongoose.model('MainContent', MainContentSchema);
 
 const ExamMasterSchema = new mongoose.Schema({
   Exam_Id: { type: Number, unique: true },
@@ -140,6 +168,55 @@ const ExamResultSchema = new mongoose.Schema({
 });
 
 const Exam_Result = mongoose.model('Exam_Result', ExamResultSchema);
+
+const advertisementSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true
+  },
+  time: {
+    type: Number,
+    required: true
+  },
+  adPath: {
+    type: String,
+    required: true
+  }
+});
+
+const Advertisement = mongoose.model('Advertisement', advertisementSchema);
+
+const advertisementCounterSchema = new mongoose.Schema({
+  adId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Advertisement',
+    required: true
+  },
+  title: {
+    type: String,
+    required: true
+  },
+  date: {
+    type: String,
+    default: () => moment().tz('Asia/Kolkata').format('YYYY-MM-DD hh:mm A')
+  },
+  username: {
+    type: String,
+    required: true
+  },
+  userId: {
+    type: String,
+    required: true
+  }
+});
+
+const AdvertisementCounter = mongoose.model('AdvertisementCounter', advertisementCounterSchema);
+
+const AdminPasswordSchema = new mongoose.Schema({
+  password: String
+});
+
+const AdminPassword = mongoose.model('AdminPassword', AdminPasswordSchema);
 
 router.get('/license', async (req, res) => {
   try {
@@ -491,6 +568,164 @@ router.get('/valid-questions/:examId', async (req, res) => {
     res.json(questionCount);
   } catch (error) {
     console.error('Error fetching question:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/mainContent', async (req, res) => {
+  try {
+    const mainContent = await MainContent.findOne();
+    if (mainContent) {
+      res.json({ title: mainContent.title, text: mainContent.text, version: mainContent.version });
+    } else {
+      res.status(404).json({ error: 'Main Content not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching Main Content:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/mainContent', async (req, res) => {
+  const { title, text } = req.body;
+
+  if (!title && !text) {
+    return res.status(400).json({ error: 'text is required' });
+  }
+
+  try {
+    let mainContent = await MainContent.findOne();
+
+    if (mainContent) {
+      mainContent.title = text;
+      mainContent.text = text;
+      mainContent.version += 1;
+      await mainContent.save();
+    } else {
+      mainContent = new MainContent({ text, version: 1 });
+      await mainContent.save();
+    }
+
+    res.status(200).json({ message: 'Main Content updated successfully' });
+  } catch (error) {
+    console.error('Error updating Main Content:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
+  try {
+    const { title, time } = req.body;
+    if (!req.file) {
+      return res.status(400).json({ error: 'Advertisement file is required' });
+    }
+
+    const adPath = req.file.path;
+
+    const newAdvertisement = new Advertisement({
+      title,
+      time,
+      adPath
+    });
+
+    await newAdvertisement.save();
+    res.status(201).json(newAdvertisement);
+  } catch (error) {
+    console.error('Error uploading advertisement:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.get('/advertisements/random', async (req, res) => {
+  try {
+    // Use the findRandom method to get a random advertisement
+    Advertisement.findRandom({}, {}, { limit: 1 }, (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(404).json({ error: 'No advertisements found' });
+      }
+      const randomAd = results[0];
+      res.status(200).json(randomAd);
+    });
+  } catch (error) {
+    console.error('Error fetching random advertisement:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/advertisement-counters', async (req, res) => {
+  try {
+    const { adId, username, userId } = req.body;
+
+    // Validate the input
+    if (!adId || !username || !userId) {
+      return res.status(400).json({ error: 'adId, username, and userId are required' });
+    }
+
+    // Find the advertisement by adId
+    const advertisement = await Advertisement.findById(adId);
+    if (!advertisement) {
+      return res.status(404).json({ error: 'Advertisement not found' });
+    }
+
+    // Create a new advertisement counter entry
+    const newCounter = new AdvertisementCounter({
+      adId,
+      title: advertisement.title,
+      username,
+      userId
+    });
+
+    // Save the counter entry to the database
+    await newCounter.save();
+
+    // Return the created entry
+    res.status(201).json(newCounter);
+  } catch (error) {
+    console.error('Error recording advertisement interaction:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/register', async (req, res) => {
+  const { password } = req.body;
+
+  try {
+    const saltRounds = 10;
+    const salt = await bcrypt.genSalt(saltRounds);
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const newUser = new AdminPassword({ password: hashedPassword });
+
+    await newUser.save();
+
+    res.status(201).json({ message: 'Registered successfully' });
+  } catch (error) {
+    console.error('Error during registration:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/login', async (req, res) => {
+  const { password } = req.body;
+
+  try {
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+    const user = await AdminPassword.findOne();
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+    res.status(200).json({ message: 'Login successful' });
+  } catch (error) {
+    console.error('Error during login:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

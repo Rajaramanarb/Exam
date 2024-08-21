@@ -4,12 +4,17 @@ import { Dropdown } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import { useUser } from "@clerk/clerk-react";
+import axios from 'axios';
 
 const HomePage = () => {
   const { user } = useUser();
   const navigate = useNavigate();
   const [licenseText, setLicenseText] = useState(localStorage.getItem('license') || '');
   const [licenseVersion, setLicenseVersion] = useState(localStorage.getItem('licenseVersion') || 0);
+  const [mainContentTitle, setMainContentTitle] = useState('');
+  const [mainContentText, setMainContentText] = useState('');
+  const [version, setVersion] = useState(null);
+  const [error, setError] = useState('');
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
   useEffect(() => {
@@ -34,6 +39,22 @@ const HomePage = () => {
 
     fetchLicense();
   }, [licenseVersion]);
+
+  useEffect(() => {
+    // Fetch the existing mainContent when the component mounts
+    const fetchMainContent = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/mainContent`);
+        setMainContentTitle(response.data.title);
+        setMainContentText(response.data.text);
+        setVersion(response.data.version);
+      } catch (error) {
+        setError('Error fetching main content');
+      }
+    };
+
+    fetchMainContent();
+  }, [apiUrl]);
 
   return (
     <div>
@@ -91,7 +112,8 @@ const HomePage = () => {
         <div style={{ width: '60cm', height: '70cm', overflowY: 'auto', padding: '10px' }}>
           <div>
             {/* Your main content goes here */}
-            <p>Main content area</p>
+            <h2>{mainContentTitle}</h2>
+            <p>{mainContentText}</p>
           </div>
         </div>
 

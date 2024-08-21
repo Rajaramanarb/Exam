@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -28,6 +28,10 @@ const ExamPage = () => {
   const [examDetails, setExamDetails] = useState({});
   const [rating, setRating] = useState(0); // State to handle the rating
   const [examResultBuffer, setExamResultBuffer] = useState(null); // Buffer for exam results
+  const [showModal, setShowModal] = useState(false);
+  const [adData, setAdData] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const timerRef = useRef(null); // Use ref to store the timer
 
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
@@ -220,6 +224,57 @@ const ExamPage = () => {
     }
   };  
 
+  useEffect(() => {
+    const fetchAdvertisement = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/advertisements/random`);
+        const ad = response.data;
+        setAdData(ad);
+        setRemainingTime(ad.time);
+        setShowModal(true);
+
+        // Clear any existing timer before starting a new one
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+        }
+
+        // Start the timer
+        timerRef.current = setInterval(() => {
+          setRemainingTime((prevTime) => {
+            if (prevTime <= 1) {
+              clearInterval(timerRef.current);
+              return 0;
+            }
+            return prevTime - 1;
+          });
+        }, 1000);
+
+        // Store the interaction using the POST API
+        await axios.post(`${apiUrl}/advertisement-counters`, {
+          adId: ad._id,
+          title: ad.title,
+          username: user.firstName,
+          userId: user.id,
+        });
+      } catch (error) {
+        console.error('Error fetching advertisement:', error);
+      }
+    };
+
+    fetchAdvertisement();
+
+    // Cleanup the interval when the component unmounts
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+      }
+    };
+  }, [user]);
+
+  const handleClose = () => {
+    setShowModal(false);
+  };
+
   return (
     <div className="container mt-5">
       <Navbar bg="light" className="mb-4" expand="lg">
@@ -235,7 +290,43 @@ const ExamPage = () => {
           ))}
         </Nav>
       </Navbar>
-      <h2 className="text-center">{examDetails.Exam_Category}</h2>      
+      <h2 className="text-center">{examDetails.Exam_Category}</h2>
+      <>
+        {adData && (
+          <Modal show={showModal} onHide={handleClose} backdrop="static" size="lg">
+            <Modal.Header>
+              <Modal.Title>
+                Closing in {remainingTime} seconds
+              </Modal.Title>
+              {(remainingTime > 0) ? (
+                <Button variant="secondary" disabled>
+                  Close
+                </Button>
+              ) : (
+                <Button variant="danger" onClick={handleClose}>
+                  Close
+                </Button>
+              )}
+            </Modal.Header>
+            <Modal.Body>
+              {adData.adPath.endsWith('.mp4') ? (
+                <video
+                  src={`${apiUrl}/${adData.adPath}`}
+                  autoPlay
+                  style={{ width: '100%', maxHeight: '600px' }}
+                />
+              ) : (
+                <img
+                  src={`${apiUrl}/${adData.adPath}`}
+                  alt={adData.title}
+                  className="img-fluid"
+                  style={{ width: '100%', maxHeight: '600px' }}
+                />
+              )}
+            </Modal.Body>
+          </Modal>
+        )}
+      </>      
       <Modal show={showStartModal} onHide={() => setShowStartModal(false)} backdrop="static">
         <Modal.Header>
           <Modal.Title>Start Exam</Modal.Title>
