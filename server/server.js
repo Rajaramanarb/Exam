@@ -218,6 +218,16 @@ const AdminPasswordSchema = new mongoose.Schema({
 
 const AdminPassword = mongoose.model('AdminPassword', AdminPasswordSchema);
 
+const subjectSchema = new mongoose.Schema({
+  Physics: [String],   
+  Chemistry: [String],
+  Maths: [String],
+  Botany: [String],
+  Zoology: [String]
+});
+
+const Subject = mongoose.model('Subject', subjectSchema);
+
 router.get('/license', async (req, res) => {
   try {
     const license = await License.findOne();
@@ -726,6 +736,47 @@ router.post('/login', async (req, res) => {
     res.status(200).json({ message: 'Login successful' });
   } catch (error) {
     console.error('Error during login:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.post('/subjects', async (req, res) => {
+  try {
+    const { Physics, Chemistry, Maths, Botany, Zoology } = req.body;
+
+    // Assuming there's only one document in the collection
+    let subject = await Subject.findOne();
+
+    if (subject) {
+      // Update the existing document
+      subject.Physics = Physics || subject.Physics;
+      subject.Chemistry = Chemistry || subject.Chemistry;
+      subject.Maths = Maths || subject.Maths;
+      subject.Botany = Botany || subject.Botany;
+      subject.Zoology = Zoology || subject.Zoology;
+    } else {
+      // Create a new document
+      subject = new Subject({ Physics, Chemistry, Maths, Botany, Zoology });
+    }
+
+    await subject.save();
+    res.status(200).json(subject);
+  } catch (error) {
+    console.error('Error saving subject:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+app.get('/subjects', async (req, res) => {
+  try {
+    const subjects = await Subject.findOne(); 
+    if (subjects) {
+      res.status(200).json(subjects);
+    } else {
+      res.status(404).json({ message: 'No subjects found' });
+    }
+  } catch (error) {
+    console.error('Error retrieving subjects:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

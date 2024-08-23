@@ -94,14 +94,38 @@ const ExamForm = () => {
   const [noOfQuestionsError, setNoOfQuestionsError] = useState('');
   const [questionsToAttendError, setQuestionsToAttendError] = useState('');
 
+  const [subjects, setSubjects] = useState({});
+  const [chapters, setChapters] = useState([]);
+
+  useEffect(() => {
+    // Fetch subjects when the component mounts
+    const fetchSubjects = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/subjects`);
+        setSubjects(response.data);
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
   
     if (name === 'Exam_Category') {
-      setQuestionDetails(prevDetails => ({
+      setExamDetails((prevDetails) => ({
         ...prevDetails,
-        Question_Subject: ''
+        Subject: '',
+        Chapter: '',
+        Exam_Category: value
       }));
+    }
+
+    if (name === 'Subject') {
+      // Update the chapters dropdown based on the selected subject
+      setChapters(subjects[value] || []);
     }
   
     if (name === 'Questions_To_Attend') {
@@ -129,6 +153,15 @@ const ExamForm = () => {
       [name]: type === 'checkbox' ? checked : value,
     });
   };  
+
+  const getSubjects = () => {
+    if (['NEET_Subjectwise', 'NEET_Chapterwise'].includes(examDetails.Exam_Category)) {
+      return ['Physics', 'Chemistry', 'Botany', 'Zoology'];
+    } else if (['JEE_Subjectwise', 'JEE_Chapterwise'].includes(examDetails.Exam_Category)) {
+      return ['Physics', 'Chemistry', 'Maths'];
+    }
+    return [];
+  };
 
   useEffect(() => {
     if (examDetails.Exam_Duration && examDetails.Questions_To_Attend) {
@@ -364,18 +397,6 @@ const ExamForm = () => {
               />
             </div>            
             <div className="mb-3">
-              <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
-              <input
-                type="text"
-                className="form-control"
-                name="Subject"
-                placeholder="Enter the subject"
-                value={examDetails.Subject}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="mb-3">
               <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
               <select
                 className="form-control"
@@ -389,10 +410,10 @@ const ExamForm = () => {
                 <option value="College">College</option>
                 <option value="NEET">NEET</option>
                 <option value="NEET_Chapterwise">NEET Chapterwise</option>
-                <option value="NEET_Questionwise">NEET Questionwise</option>
+                <option value="NEET_Subjectwise">NEET Subjectwise</option>
                 <option value="JEE">JEE</option>                
                 <option value="JEE_Chapterwise">JEE Chapterwise</option>
-                <option value="JEE_Questionwise">JEE Questionwise</option>
+                <option value="JEE_Subjectwise">JEE Subjectwise</option>
                 <option value="Others">Others</option>
               </select>
             </div>
@@ -419,6 +440,42 @@ const ExamForm = () => {
                 required
               />
             </div>
+            {['NEET_Subjectwise', 'NEET_Chapterwise', 'JEE_Subjectwise', 'JEE_Chapterwise'].includes(examDetails.Exam_Category) ? (
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Subject<span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  className="form-control"
+                  name="Subject"
+                  value={examDetails.Subject}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Subject</option>
+                  {getSubjects().map((subject) => (
+                    <option key={subject} value={subject}>
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
+              <div></div>
+            ) : (
+              <div className="mb-3">
+                <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="Subject"
+                  placeholder="Enter the subject"
+                  value={examDetails.Subject}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            )}            
             <div className="mb-3">
               <label className="form-check-label fw-bold me-4" htmlFor="flexCheckbox">Negative Marking</label>
               <input
@@ -429,7 +486,7 @@ const ExamForm = () => {
                 checked={examDetails.Negative_Marking}
                 onChange={handleChange}
               />
-            </div>
+            </div>            
           </div>
           <div className="col-md-6">
             <div className="mb-3">
@@ -505,6 +562,27 @@ const ExamForm = () => {
                   required
                 />
             </div>
+            {['NEET_Chapterwise', 'JEE_Chapterwise'].includes(examDetails.Exam_Category) && (
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Chapter<span style={{ color: 'red' }}>*</span>
+                </label>
+                <select
+                  className="form-control"
+                  name="Chapter"
+                  value={examDetails.Chapter}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Chapter</option>
+                  {chapters.map((chapter, index) => (
+                    <option key={index} value={chapter}>
+                      {chapter}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         </div>
         <div className="text-center">
