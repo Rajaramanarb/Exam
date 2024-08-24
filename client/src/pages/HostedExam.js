@@ -152,55 +152,61 @@ const HostedExam = () => {
           </tr>
         </thead>
         <tbody>
-          {exams.map((exam, index) => (
-            <tr key={index}>
-              <td>{exam.Exam_Id}</td>
-              <td>{exam.Exam_Desc}</td>
-              <td>{exam.Subject}</td>
-              <td>{exam.Exam_Category}</td>
-              {/* <td>
-                <span className={`text fw-bold ${
-                  exam.Difficulty_Level === 'Easy'
-                    ? 'text-success'
-                    : exam.Difficulty_Level === 'Medium'
-                    ? 'text-warning'
-                    : exam.Difficulty_Level === 'Hard'
-                    ? 'text-danger'
-                    : ''
-                }`}>
-                  {exam.Difficulty_Level}
-                </span>
-              </td> */}
-              <td>{moment(exam.Publish_Date).format('YYYY-MM-DD hh:mm A')}</td>
-              <td>
-                <span className={`text fw-bold ${moment().isAfter(moment(exam.Exam_Valid_Upto)) ? 'text-danger' : 'text-success'}`}>
-                  {moment(exam.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')}
-                </span>
-              </td>              
-              <td>
-                <span
-                  className={`text fw-bold ${
-                    exam.isReady
-                      ? 'text-success' // Green color for true
-                      : 'text-danger'  // Red color for false
-                  }`}
-                >
-                  {exam.isReady ? 'Ready' : 'Pending'}
-                </span>
-              </td>
-              <td>
-                {editableExams[exam.Exam_Id] && (
-                  <Button variant="warning" className="me-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
-                )}
+          {exams.length > 0 ? (
+            exams.map((exam, index) => (
+              <tr key={index}>
+                <td>{exam.Exam_Id}</td>
+                <td>{exam.Exam_Desc}</td>
+                <td>{exam.Subject}</td>
+                <td>{exam.Exam_Category}</td>
+                {/* <td>
+                  <span className={`text fw-bold ${
+                    exam.Difficulty_Level === 'Easy'
+                      ? 'text-success'
+                      : exam.Difficulty_Level === 'Medium'
+                      ? 'text-warning'
+                      : exam.Difficulty_Level === 'Hard'
+                      ? 'text-danger'
+                      : ''
+                  }`}>
+                    {exam.Difficulty_Level}
+                  </span>
+                </td> */}
+                <td>{moment(exam.Publish_Date).format('YYYY-MM-DD hh:mm A')}</td>
+                <td>
+                  <span className={`text fw-bold ${moment().isAfter(moment(exam.Exam_Valid_Upto)) ? 'text-danger' : 'text-success'}`}>
+                    {moment(exam.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A')}
+                  </span>
+                </td>              
+                <td>
+                  <span
+                    className={`text fw-bold ${
+                      exam.isReady
+                        ? 'text-success' // Green color for true
+                        : 'text-danger'  // Red color for false
+                    }`}
+                  >
+                    {exam.isReady ? 'Ready' : 'Pending'}
+                  </span>
+                </td>
+                <td>
+                  {editableExams[exam.Exam_Id] && (
+                    <Button variant="warning" className="me-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
+                  )}
 
-                {exam.isDeleted === false ? (
-                  <Button variant="danger" onClick={() => handleDelete(index)}>🗑️ Delete</Button>
-                ) : (
-                  <Button variant="primary" onClick={() => handleReactivate(index)}>🚀 Re-activate</Button>
-                )}
-              </td>
+                  {exam.isDeleted === false ? (
+                    <Button variant="danger" onClick={() => handleDelete(index)}>🗑️ Delete</Button>
+                  ) : (
+                    <Button variant="primary" onClick={() => handleReactivate(index)}>🚀 Re-activate</Button>
+                  )}
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="8" className="text-center">No exams available.</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </Table>
     </div>

@@ -227,7 +227,7 @@ const TakeExam = () => {
             ))
           ) : (
             <tr>
-              <td colSpan="7" className="text-center">No exams available.</td>
+              <td colSpan="8" className="text-center">No exams available.</td>
             </tr>
           )}
         </tbody>

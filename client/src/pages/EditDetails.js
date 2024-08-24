@@ -83,14 +83,46 @@ const EditDetails = () => {
   const [noOfQuestionsError, setNoOfQuestionsError] = useState('');
   const [questionsToAttendError, setQuestionsToAttendError] = useState('');
 
+  const [subjects, setSubjects] = useState({});
+  const [chapters, setChapters] = useState([]);
+
+  useEffect(() => {
+    // Fetch subjects when the component mounts
+    const fetchSubjects = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/subjects`);
+        setSubjects(response.data);        
+      } catch (error) {
+        console.error('Error fetching subjects:', error);
+      }
+    };
+
+    const fetchChapters = async () => {
+      if (examDetails.Subject) {
+        const fetchedChapters = subjects[examDetails.Subject] || [];
+        setChapters(fetchedChapters);
+      }
+    };
+
+    fetchSubjects();
+    fetchChapters();
+  }, [apiUrl, examDetails.Subject, subjects]);
+
   const handleExamChange = (e) => {
     const { name, value, type, checked } = e.target;
 
     if (name === 'Exam_Category') {
       setQuestionDetails(prevDetails => ({
         ...prevDetails,
-        Question_Subject: ''
+        Subject: '',
+        Chapter: '',
+        Exam_Category: value
       }));
+    }
+
+    if (name === 'Subject') {
+      // Update the chapters dropdown based on the selected subject
+      setChapters(subjects[value] || []);
     }
 
     if (name === 'Questions_To_Attend') {
@@ -117,6 +149,15 @@ const EditDetails = () => {
       ...examDetails,
       [name]: type === 'checkbox' ? checked : value,
     });
+  };
+
+  const getSubjects = () => {
+    if (['NEET_Subjectwise', 'NEET_Chapterwise'].includes(examDetails.Exam_Category)) {
+      return ['Physics', 'Chemistry', 'Botany', 'Zoology'];
+    } else if (['JEE_Subjectwise', 'JEE_Chapterwise'].includes(examDetails.Exam_Category)) {
+      return ['Physics', 'Chemistry', 'Maths'];
+    }
+    return [];
   };
 
   const handleQuestionChange = (e) => {
@@ -436,7 +477,8 @@ const EditDetails = () => {
         <form onSubmit={handleExamSubmit} className="p-4 border rounded shadow-sm">
           <div className="row">
             <div className="col-md-6">
-              <div className="mb-3">
+            <div className="mb-3 d-flex align-items-center">
+              <div className="me-0">
                 <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
@@ -446,21 +488,10 @@ const EditDetails = () => {
                   value={examDetails.Exam_Desc}
                   onChange={handleExamChange}
                   required
+                  style={{ width: '290px' }} 
                 />
               </div>            
-              <div className="mb-3">
-                <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Subject"
-                  placeholder="Enter the subject"
-                  value={examDetails.Subject}
-                  onChange={handleExamChange}
-                  required
-                />
-              </div>
-              <div className="mb-3">
+              <div className="form-check mb-0">
                 <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
                 <select
                   className="form-control"
@@ -468,44 +499,85 @@ const EditDetails = () => {
                   value={examDetails.Exam_Category}
                   onChange={handleExamChange}
                   required
+                  style={{ width: '290px' }} 
                 >
                   <option value="">Select Category</option>
                   <option value="LowerGrade">Lower Grade</option>
                   <option value="College">College</option>
                   <option value="NEET">NEET</option>
                   <option value="NEET_Chapterwise">NEET Chapterwise</option>
-                  <option value="NEET_Questionwise">NEET Questionwise</option>
+                  <option value="NEET_Subjectwise">NEET Subjectwise</option>
                   <option value="JEE">JEE</option>                
                   <option value="JEE_Chapterwise">JEE Chapterwise</option>
-                  <option value="JEE_Questionwise">JEE Questionwise</option>
+                  <option value="JEE_Subjectwise">JEE Subjectwise</option>
                   <option value="Others">Others</option>
                 </select>
               </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="Exam_Duration"
-                  placeholder="Enter the exam duration in minutes"
-                  value={examDetails.Exam_Duration}
-                  onChange={handleExamChange}
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Question Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="number"
-                  className="form-control"
-                  name="Question_Duration"
-                  value={examDetails.Question_Duration}
-                  readOnly
-                  required
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-check-label fw-bold me-4" htmlFor="flexCheckbox">Negative Marking</label>
+            </div>
+            <div className="mb-3 d-flex align-items-center">
+              {['NEET_Subjectwise', 'NEET_Chapterwise', 'JEE_Subjectwise', 'JEE_Chapterwise'].includes(examDetails.Exam_Category) ? (
+                <div className="me-0">
+                  <label className="form-label fw-bold">
+                    Subject<span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    className="form-control"
+                    name="Subject"
+                    value={examDetails.Subject}
+                    onChange={handleExamChange}
+                    required
+                    style={{ width: '130px' }} 
+                  >
+                    <option value="">Select Subject</option>
+                    {getSubjects().map((subject) => (
+                      <option key={subject} value={subject}>
+                        {subject}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ) : examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
+                <div></div>
+              ) : (
+                <div className="me-3">
+                  <label className="form-label fw-bold">Subject<span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="Subject"
+                    placeholder="Enter the subject"
+                    value={examDetails.Subject}
+                    onChange={handleExamChange}
+                    required
+                    style={{ width: '290px' }} 
+                  />
+                </div>
+              )}
+              {['NEET_Chapterwise', 'JEE_Chapterwise'].includes(examDetails.Exam_Category) && (
+                <div className="form-check mb-0">
+                  <label className="form-label fw-bold">
+                    Chapter<span style={{ color: 'red' }}>*</span>
+                  </label>
+                  <select
+                    className="form-control"
+                    name="Chapter"
+                    value={examDetails.Chapter}
+                    onChange={handleExamChange}
+                    required
+                    style={{ width: '450px' }} 
+                  >
+                    <option value="">Select Chapter</option>
+                    {chapters.map((chapter, index) => (
+                      <option key={index} value={chapter}>
+                        {chapter}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}    
+            </div>                     
+            <div className="mb-3">
+              <label className="form-check-label fw-bold me-4" htmlFor="flexCheckbox">Negative Marking</label>
                 <input
                   type="checkbox"
                   className="form-check-input custom-checkbox"
@@ -514,10 +586,35 @@ const EditDetails = () => {
                   checked={examDetails.Negative_Marking}
                   onChange={handleExamChange}
                 />
-              </div>
             </div>
-            <div className="col-md-6">
-            <div className="mb-3">
+            </div>
+            {/* <div className="mb-3">
+              <label className="form-label fw-bold">Question Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
+              <input
+                type="number"
+                className="form-control"
+                name="Question_Duration"                
+                value={examDetails.Question_Duration}
+                readOnly
+                required
+              />
+            </div>   */}         
+          <div className="col-md-6">
+            <div className="mb-3 d-flex align-items-center">
+              <div className="mb-0">
+                  <label className="form-label fw-bold">Exam Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    name="Exam_Duration"
+                    placeholder="Enter the exam duration in minutes"
+                    value={examDetails.Exam_Duration}
+                    onChange={handleExamChange}
+                    required
+                    style={{ width: '290px' }} 
+                  />               
+              </div>
+              <div className="form-check mb-0">
                 <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
                 <select
                   className="form-control"
@@ -525,15 +622,19 @@ const EditDetails = () => {
                   value={examDetails.Difficulty_Level}
                   onChange={handleExamChange}
                   required
+                  style={{ width: '290px' }} 
                 >
                   <option value="">Select Difficulty Level</option>
                   <option value="Easy">Easy</option>
                   <option value="Medium">Medium</option>
                   <option value="Hard">Hard</option>
                 </select>
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Number of Questions<span style={{ color: 'red' }}>*</span>
+              </div>       
+            </div>
+            <div className="mb-3 d-flex align-items-center">     
+              <div className="mb-0">
+                <label className="form-label fw-bold">
+                  Number of Questions<span style={{ color: 'red' }}>*</span>
                 </label>
                 <input
                   type="number"
@@ -543,24 +644,44 @@ const EditDetails = () => {
                   value={examDetails.No_of_Questions}
                   onChange={handleExamChange}
                   required
+                  style={{ width: '290px' }}
                 />
                 {noOfQuestionsError && <Alert variant="danger">{noOfQuestionsError}</Alert>}
               </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Questions To Attend<span style={{ color: 'red' }}>*</span>
+              <div className="form-check mb-0">
+                <label className="form-label fw-bold">
+                  Questions To Attend<span style={{ color: 'red' }}>*</span>
                 </label>
                 <input
                   type="number"
                   className="form-control"
                   name="Questions_To_Attend"
-                  placeholder="Enter number of questions to attend"
+                  placeholder="Enter no of questions to attend"
                   value={examDetails.Questions_To_Attend}
                   onChange={handleExamChange}
                   required
+                  style={{ width: '290px' }}
                 />
                 {questionsToAttendError && <Alert variant="danger">{questionsToAttendError}</Alert>}
               </div>
-              <div className="mb-3">
+            </div>
+            <div className="mb-3 d-flex align-items-center">
+              <div className="mb-0">
+                  <label className="form-label fw-bold">Publish Date<span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    name="Publish_Date"
+                    value={moment(examDetails.Publish_Date).format('YYYY-MM-DDTHH:mm')}
+                    onChange={(e) => {
+                    handleExamChange(e);
+                    e.target.blur(); // Force the calendar to close after selection
+                    }}
+                    required
+                    style={{ width: '290px' }}
+                  />
+              </div>  
+              <div className="form-check mb-0">
                 <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="datetime-local"
@@ -572,24 +693,12 @@ const EditDetails = () => {
                     e.target.blur(); // Force the calendar to close after selection
                   }}
                   required
+                  style={{ width: '290px' }}
                 />
               </div>
-              <div className="mb-3">
-                  <label className="form-label fw-bold">Publish Date<span style={{ color: 'red' }}>*</span></label>
-                  <input
-                    type="datetime-local"
-                    className="form-control"
-                    name="Publish_Date"
-                    value={moment(examDetails.Publish_Date).format('YYYY-MM-DDTHH:mm')}
-                    onChange={(e) => {
-                      handleExamChange(e);
-                      e.target.blur(); // Force the calendar to close after selection
-                    }}
-                    required
-                  />
-              </div>
-            </div>
+            </div>                      
           </div>
+        </div>
           <div className="text-center">
           <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
             {isSubmitting ? 'Updating...' : 'Update'}

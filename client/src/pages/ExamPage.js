@@ -17,9 +17,9 @@ const ExamPage = () => {
   const [currentQuestion, setCurrentQuestion] = useState({});
   const [showStartModal, setShowStartModal] = useState(true);
   const [examDuration, setExamDuration] = useState(0);
-  const [questionDuration, setQuestionDuration] = useState(0);
+  //const [questionDuration, setQuestionDuration] = useState(0);
   const [timeLeft, setTimeLeft] = useState(null);
-  const [questionTimesLeft, setQuestionTimesLeft] = useState([]);
+  //const [questionTimesLeft, setQuestionTimesLeft] = useState([]);
   const [answers, setAnswers] = useState([]);
   const [correctAnswers, setCorrectAnswers] = useState({});
   const [originalQuestionsOrder, setOriginalQuestionsOrder] = useState([]);
@@ -42,11 +42,11 @@ const ExamPage = () => {
         const exam = response.data;
         setExamDetails(exam);
         setExamDuration(exam.Exam_Duration);
-        setQuestionDuration(exam.Question_Duration);
+        //setQuestionDuration(exam.Question_Duration);
     
         const noOfQuestions = exam.No_of_Questions;  // Total questions set by the author
         const questionsToAttend = exam.Questions_To_Attend;  // Questions user needs to attend
-        setQuestionTimesLeft(new Array(questionsToAttend).fill(exam.Question_Duration * 60));
+        //setQuestionTimesLeft(new Array(questionsToAttend).fill(exam.Question_Duration * 60));
         setAnswers(new Array(questionsToAttend).fill(null));
     
         let allQuestions = [];
@@ -106,14 +106,15 @@ const ExamPage = () => {
 
   useEffect(() => {
     if (timeLeft === 0) {
-      finishExam();
+      //finishExam();
+      endExam();
     } else if (timeLeft !== null) {
       const examTimer = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
       return () => clearTimeout(examTimer);
     }
   }, [timeLeft]);
 
-  useEffect(() => {
+  /* useEffect(() => {
     if (questionTimesLeft[currentQuestionIndex] === 0 && timeLeft !== null) {
       handleNextQuestion();
     } else if (questionTimesLeft[currentQuestionIndex] !== null && timeLeft !== null) {
@@ -124,7 +125,7 @@ const ExamPage = () => {
       }, 1000);
       return () => clearTimeout(questionTimer);
     }
-  }, [questionTimesLeft, currentQuestionIndex, timeLeft]);
+  }, [questionTimesLeft, currentQuestionIndex, timeLeft]); */
 
   const formatTime = (seconds) => {
     const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
@@ -291,7 +292,7 @@ const ExamPage = () => {
         </Nav>
       </Navbar>
       <h2 className="text-center">{examDetails.Exam_Category}</h2>
-      <>
+      <div>
         {adData && (
           <Modal show={showModal} onHide={handleClose} backdrop="static" size="lg">
             <Modal.Header>
@@ -326,7 +327,7 @@ const ExamPage = () => {
             </Modal.Body>
           </Modal>
         )}
-      </>      
+      </div>      
       <Modal show={showStartModal} onHide={() => setShowStartModal(false)} backdrop="static">
         <Modal.Header>
           <Modal.Title>Start Exam</Modal.Title>
@@ -352,8 +353,10 @@ const ExamPage = () => {
         <div className="card shadow-sm">
           <div className="card-body">
             <div className="d-flex justify-content-between mb-3">
-              <div>Time Left: {formatTime(timeLeft)}</div>
-              <div>Question Time Left: {formatTime(questionTimesLeft[currentQuestionIndex])}</div>
+              {/* <div>Time Left: {formatTime(timeLeft)}</div> */}
+              {/* <div>Question Time Left: {formatTime(questionTimesLeft[currentQuestionIndex])}</div> */}
+              <div></div> {/* Empty div to push content to the right */}
+              <div className="ms-auto"><b>Time Left:</b> {formatTime(timeLeft)}</div>
             </div>
             {currentQuestion.Question_Subject && (
               <h4 className="text-center">{currentQuestion.Question_Subject}</h4> 

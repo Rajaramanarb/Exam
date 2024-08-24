@@ -119,44 +119,47 @@ const RateExam = () => {
           </tr>
         </thead>
         <tbody>
-          {exams.map((exam, index) => (
-            <tr key={index}>
-              <td>{exam.Exam_ID}</td>
-              <td>{exam.Exam_Desc}</td>
-              <td>{exam.Subject}</td>
-              <td>{exam.Exam_Category}</td>
-              <td>
-                <span className={`text fw-bold ${
-                  exam.Difficulty_Level === 'Easy'
-                    ? 'text-success'
-                    : exam.Difficulty_Level === 'Medium'
-                    ? 'text-warning'
-                    : exam.Difficulty_Level === 'Hard'
-                    ? 'text-danger'
-                    : ''
-                }`}>
-                  {exam.Difficulty_Level}
-                </span>
-              </td>
-              <td>{exam.Score} / {(exam.Responses).length}</td>
-              <td>
-              {editingRating === exam.Exam_ID ? (
-                <div className="d-flex align-items-center">
-                  <FormControl
-                    type="number"
-                    value={newRating[exam.Exam_ID]}
-                    onChange={(e) => handleRatingChange(exam.Exam_ID, e.target.value)}
-                    min={1}
-                    max={5}
-                    style={{ width: '60px' }}
-                  />
-                  <span className="ms-1">/ 5</span>
-                </div>
-              ) : (
-                `${exam.Rating} / 5`
-              )}
-            </td>
-            <td>
+          {exams.length > 0 ? (
+            exams.map((exam, index) => (
+              <tr key={index}>
+                <td>{exam.Exam_ID}</td>
+                <td>{exam.Exam_Desc}</td>
+                <td>{exam.Subject}</td>
+                <td>{exam.Exam_Category}</td>
+                <td>
+                  <span
+                    className={`text fw-bold ${
+                      exam.Difficulty_Level === 'Easy'
+                        ? 'text-success'
+                        : exam.Difficulty_Level === 'Medium'
+                        ? 'text-warning'
+                        : exam.Difficulty_Level === 'Hard'
+                        ? 'text-danger'
+                        : ''
+                    }`}
+                  >
+                    {exam.Difficulty_Level}
+                  </span>
+                </td>
+                <td>{exam.Score} / {exam.Responses.length}</td>
+                <td>
+                  {editingRating === exam.Exam_ID ? (
+                    <div className="d-flex align-items-center">
+                      <FormControl
+                        type="number"
+                        value={newRating[exam.Exam_ID]}
+                        onChange={(e) => handleRatingChange(exam.Exam_ID, e.target.value)}
+                        min={1}
+                        max={5}
+                        style={{ width: '60px' }}
+                      />
+                      <span className="ms-1">/ 5</span>
+                    </div>
+                  ) : (
+                    `${exam.Rating} / 5`
+                  )}
+                </td>
+                <td>
                   {editingRating === exam.Exam_ID ? (
                     <>
                       <Button variant="success" onClick={() => handleSaveRating(exam.Exam_ID)} className="me-2">Save</Button>
@@ -165,9 +168,14 @@ const RateExam = () => {
                   ) : (
                     <Button variant="primary" className="me-2" onClick={() => handleEdit(exam.Exam_ID)}>Rate Exam</Button>
                   )}
-            </td>
+                </td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="8" className="text-center">No exams available.</td>
             </tr>
-          ))}
+          )}
         </tbody>
       </Table>
     </div>

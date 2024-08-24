@@ -11,9 +11,9 @@ const HomePage = () => {
   const navigate = useNavigate();
   const [licenseText, setLicenseText] = useState(localStorage.getItem('license') || '');
   const [licenseVersion, setLicenseVersion] = useState(localStorage.getItem('licenseVersion') || 0);
-  const [mainContentTitle, setMainContentTitle] = useState('');
-  const [mainContentText, setMainContentText] = useState('');
-  const [version, setVersion] = useState(null);
+  const [mainContentTitle, setMainContentTitle] = useState(localStorage.getItem('mainContentTitle') || '');
+  const [mainContentText, setMainContentText] = useState(localStorage.getItem('mainContentText') || '');
+  const [version, setVersion] = useState(localStorage.getItem('mainContentVersion') || null);
   const [error, setError] = useState('');
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
@@ -41,20 +41,30 @@ const HomePage = () => {
   }, [licenseVersion]);
 
   useEffect(() => {
-    // Fetch the existing mainContent when the component mounts
     const fetchMainContent = async () => {
       try {
         const response = await axios.get(`${apiUrl}/mainContent`);
-        setMainContentTitle(response.data.title);
-        setMainContentText(response.data.text);
-        setVersion(response.data.version);
+        if (response.status === 200) {
+          const data = response.data;
+          if (data.version > version) {
+            localStorage.setItem('mainContentTitle', data.title);
+            localStorage.setItem('mainContentText', data.text);
+            localStorage.setItem('mainContentVersion', data.version);
+            setMainContentTitle(data.title);
+            setMainContentText(data.text);
+            setVersion(data.version);
+          }
+        } else {
+          console.error('Failed to fetch main content:', response.statusText);
+        }
       } catch (error) {
+        console.error('Error fetching main content:', error);
         setError('Error fetching main content');
       }
     };
 
     fetchMainContent();
-  }, [apiUrl]);
+  }, [version]);
 
   return (
     <div>
@@ -93,14 +103,14 @@ const HomePage = () => {
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
           <ul className="list-group">
             <SignedIn>
-              <li className="list-group-item"><Link to="/TakeExam">Take an Exam</Link></li>
-              <li className="list-group-item"><Link to="/ExamForm">Host an Exam</Link></li>
-              <li className="list-group-item"><Link to="/TopExams">Top Exams</Link></li>
+              <li className="list-group-item"><Link to="/TakeExam">Take an exam</Link></li>
+              <li className="list-group-item"><Link to="/ExamForm">Host an exam</Link></li>
+              <li className="list-group-item"><Link to="/TopExams">Top exams</Link></li>
             </SignedIn>
             <SignedOut>
-              <li className="list-group-item" onClick={() => alert('Please sign in to take an exam.')}>Take an Exam</li>
-              <li className="list-group-item" onClick={() => alert('Please sign in to host an exam.')}>Host an Exam</li>
-              <li className="list-group-item" onClick={() => alert('Please sign in to see Top Exams.')}>Top Exams</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to take an exam.')}>Take an exam</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to host an exam.')}>Host an exam</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to see Top Exams.')}>Top exams</li>
             </SignedOut>
           </ul>
           <div className="mt-3">
@@ -121,12 +131,12 @@ const HomePage = () => {
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
           <ul className="list-group">
             <SignedIn>
-              <li className="list-group-item"><Link to="/HostedExam">My Exams</Link></li>
-              <li className="list-group-item"><Link to="/RateExam">Rate Exam</Link></li>
+              <li className="list-group-item"><Link to="/HostedExam">My exams</Link></li>
+              <li className="list-group-item"><Link to="/RateExam">Rate exam</Link></li>
             </SignedIn>
             <SignedOut>
-              <li className="list-group-item" onClick={() => alert('Please sign in to see my exams.')}>My Exams</li>
-              <li className="list-group-item" onClick={() => alert('Please sign in to rate exam.')}>Rate Exam</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to see my exams.')}>My exams</li>
+              <li className="list-group-item" onClick={() => alert('Please sign in to rate exam.')}>Rate exam</li>
             </SignedOut>
           </ul>
           <div className="mt-3">
@@ -141,7 +151,7 @@ const HomePage = () => {
           <div className="row">
             <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
               <h5 className="text-uppercase">License & Agreement</h5>
-              <p>{licenseText || 'Loading...'}</p>
+              <p>{licenseText}</p>
             </div>
             <div className="col-lg-4 col-md-6 mb-4 mb-md-0">
               <h5 className="text-uppercase">Contact Us</h5>
