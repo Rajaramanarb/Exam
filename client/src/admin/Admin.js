@@ -105,6 +105,9 @@ const Admin = () => {
             <Button as={Link} to="/AdminPassword" variant="info" className="mx-2" size="lg" state={{ from: '/Admin' }}>
               Admin Password
             </Button>
+            <Button as={Link} to="/AdTime" variant="success" className="mx-2" size="lg" state={{ from: '/Admin' }}>
+              Set Ad Time
+            </Button>
           </div>
         </div>
       </Container>

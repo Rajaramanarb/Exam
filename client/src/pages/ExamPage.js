@@ -32,6 +32,7 @@ const ExamPage = () => {
   const [adData, setAdData] = useState(null);
   const [remainingTime, setRemainingTime] = useState(0);
   const timerRef = useRef(null); // Use ref to store the timer
+  const adFetched = useRef(false); // Ref to check if ad was already fetched
 
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
@@ -227,11 +228,15 @@ const ExamPage = () => {
 
   useEffect(() => {
     const fetchAdvertisement = async () => {
+      if (adFetched.current) return; // Prevent duplicate fetch
+      adFetched.current = true; // Mark ad as fetched
+
       try {
+        // Fetch the advertisement
         const response = await axios.get(`${apiUrl}/advertisements/next`);
         const ad = response.data;
         setAdData(ad);
-        setRemainingTime(ad.time);
+        //setRemainingTime(ad.time);
         setShowModal(true);
 
         // Clear any existing timer before starting a new one
@@ -275,6 +280,14 @@ const ExamPage = () => {
   const handleClose = () => {
     setShowModal(false);
   };
+
+  useEffect(() => {
+    if (examDetails.time != null) {
+      setRemainingTime(examDetails.time);
+    } else if (adData && adData.time != null) {
+      setRemainingTime(adData.time);
+    }
+  }, [examDetails, adData]);
 
   return (
     <div className="container mt-5">
