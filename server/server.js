@@ -126,7 +126,8 @@ const ExamMasterSchema = new mongoose.Schema({
   Publish_Date: { type: String, required: true },
   Exam_Valid_Upto: { type: String, required: true },
   Negative_Marking: { type: Boolean, required: true },
-  isDeleted: { type: Boolean, required: true }
+  isDeleted: { type: Boolean, required: true },
+  time: Number
 });
 
 ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });
@@ -647,18 +648,30 @@ router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
   }
 });
 
-router.get('/advertisements/random', async (req, res) => {
+let lastAdIndex = -1; // This will store the last served ad index
+
+router.get('/advertisements/next', async (req, res) => {
   try {
-    // Use the findRandom method to get a random advertisement
-    Advertisement.findRandom({}, {}, { limit: 1 }, (err, results) => {
-      if (err || results.length === 0) {
-        return res.status(404).json({ error: 'No advertisements found' });
-      }
-      const randomAd = results[0];
-      res.status(200).json(randomAd);
-    });
+    // Get the total number of advertisements
+    const totalAds = await Advertisement.countDocuments({});
+
+    if (totalAds === 0) {
+      return res.status(404).json({ error: 'No advertisements found' });
+    }
+
+    // Calculate the next ad index
+    lastAdIndex = (lastAdIndex + 1) % totalAds;
+
+    // Fetch the advertisement at the next index
+    const nextAd = await Advertisement.findOne().skip(lastAdIndex).exec();
+
+    if (!nextAd) {
+      return res.status(404).json({ error: 'No advertisement found' });
+    }
+
+    res.status(200).json(nextAd);
   } catch (error) {
-    console.error('Error fetching random advertisement:', error);
+    console.error('Error fetching advertisement:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

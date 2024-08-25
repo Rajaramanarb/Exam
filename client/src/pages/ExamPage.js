@@ -228,7 +228,7 @@ const ExamPage = () => {
   useEffect(() => {
     const fetchAdvertisement = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/advertisements/random`);
+        const response = await axios.get(`${apiUrl}/advertisements/next`);
         const ad = response.data;
         setAdData(ad);
         setRemainingTime(ad.time);
