@@ -154,9 +154,11 @@ const TakeExam = () => {
             onChange={e => setSubject(e.target.value)}
           >
             <option value="">All</option>
-            {[...new Set(exams.map(exam => exam.Subject))].map(sub => (
-              <option key={sub} value={sub}>{sub}</option>
-            ))}
+            {[...new Set(exams.map(exam => exam.Subject))]
+              .filter(sub => sub)  // Filter out empty strings
+              .map(sub => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
           </select>
         </div>
         <div className="flex-fill">
