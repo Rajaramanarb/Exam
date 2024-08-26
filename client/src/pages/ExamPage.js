@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button, Modal, Navbar, Nav } from 'react-bootstrap';
+import { Table, Button, Modal, Navbar, Nav } from 'react-bootstrap';
 import { useUser } from '@clerk/clerk-react';
 import Rating from 'react-rating-stars-component'; // Import the rating component
 import '../css/ExamPage.css';
@@ -341,23 +341,58 @@ const ExamPage = () => {
           </Modal>
         )}
       </div>      
-      <Modal show={showStartModal} onHide={() => setShowStartModal(false)} backdrop="static">
+      <Modal show={showStartModal} onHide={() => setShowStartModal(false)} backdrop="static" size="lg">
         <Modal.Header>
           <Modal.Title>Start Exam</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <p><strong>Exam Description:</strong> {examDetails.Exam_Desc}</p>
-          <p><strong>Subject:</strong> {examDetails.Subject}</p>
-          <p><strong>Author Name:</strong> {examDetails.Author_Name}</p>
-          <p><strong>Exam Category:</strong> {examDetails.Exam_Category}</p>
-          <p><strong>Difficulty Level:</strong> {examDetails.Difficulty_Level}</p>
-          <p><strong>Number of Questions:</strong> {examDetails.Questions_To_Attend}</p>
-          <p><strong>Negative Marking:</strong> {examDetails.Negative_Marking ? "Yes" : "No"}</p>
-          <p><strong>Exam Duration:</strong> {examDetails.Exam_Duration} minutes</p>
-          <p><strong>Question Duration:</strong> {examDetails.Question_Duration} minutes</p>
-          <b>Are you ready to start the exam?</b>
+          <Table bordered hover>
+            <tbody>
+              <tr>
+                <td><strong>Exam Description</strong></td>
+                <td>{examDetails.Exam_Desc}</td>
+              </tr>
+              <tr>
+                <td><strong>Subject</strong></td>
+                <td>{examDetails.Subject}</td>
+              </tr>
+              <tr>
+                <td><strong>Chapter</strong></td>
+                <td>{examDetails.Chapter}</td>
+              </tr>
+              <tr>
+                <td><strong>Author Name</strong></td>
+                <td>{examDetails.Author_Name}</td>
+              </tr>
+              <tr>
+                <td><strong>Exam Category</strong></td>
+                <td>{examDetails.Exam_Category}</td>
+              </tr>
+              <tr>
+                <td><strong>Difficulty Level</strong></td>
+                <td>{examDetails.Difficulty_Level}</td>
+              </tr>
+              <tr>
+                <td><strong>Number of Questions</strong></td>
+                <td>{examDetails.Questions_To_Attend}</td>
+              </tr>
+              <tr>
+                <td><strong>Negative Marking</strong></td>
+                <td>{examDetails.Negative_Marking ? "Yes" : "No"}</td>
+              </tr>
+              <tr>
+                <td><strong>Exam Duration</strong></td>
+                <td>{examDetails.Exam_Duration} minutes</td>
+              </tr>
+              {/* <tr>
+                <td><strong>Question Duration:</strong></td>
+                <td>{examDetails.Question_Duration} minutes</td>
+              </tr> */}
+            </tbody>
+          </Table>
         </Modal.Body>
-        <Modal.Footer>
+        <Modal.Footer>          
+          <b>Are you ready to start the exam?</b>
           <Button variant="secondary" onClick={() => navigate(-1)}>No</Button>
           <Button variant="primary" onClick={handleStartExam}>Yes</Button>
         </Modal.Footer>
