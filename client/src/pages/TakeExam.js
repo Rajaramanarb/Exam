@@ -178,10 +178,10 @@ const TakeExam = () => {
       <Table className="table table-hover">
         <thead className="thead-dark">
           <tr>
-            <th>Exam ID</th>
-            <th>Description</th>
-            <th>Subject</th>
+            <th>Exam ID</th>            
             <th>Exam Category</th>
+            <th>Subject</th>
+            <th>Chapter</th>
             <th>Author</th>
             <th>Rating</th>
             <th>Difficulty Level</th>            
@@ -192,10 +192,10 @@ const TakeExam = () => {
           {filteredExams.length > 0 ? (
             filteredExams.map((exam, index) => (
               <tr key={index}>
-                <td>{exam.Exam_Id}</td>
-                <td>{exam.Exam_Desc}</td>
-                <td>{exam.Subject}</td>
+                <td>{exam.Exam_Id}</td>               
                 <td>{exam.Exam_Category}</td>
+                <td>{exam.Subject}</td>
+                <td>{exam.Chapter}</td>
                 <td>{exam.Author_Name}</td>
                 <td>
                   {ratings[exam.Exam_Id] !== undefined 

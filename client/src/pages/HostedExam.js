@@ -109,6 +109,10 @@ const HostedExam = () => {
     navigate(`/EditDetails/${examId}`);
   };
 
+  const handleView = (examId) => {
+    navigate(`/ViewDetails/${examId}`);
+  };
+
   return (
     <div>
       <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -190,9 +194,12 @@ const HostedExam = () => {
                   </span>
                 </td>
                 <td>
-                  {editableExams[exam.Exam_Id] && (
+                  {editableExams[exam.Exam_Id] === true ? (
                     <Button variant="warning" className="me-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
-                  )}
+                  ) : (
+                    <Button variant="primary" className="me-2" onClick={() => handleView(exam.Exam_Id)}>🖥️ View</Button>
+                  )
+                  }
 
                   {exam.isDeleted === false ? (
                     <Button variant="danger" onClick={() => handleDelete(index)}>🗑️ Delete</Button>

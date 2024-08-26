@@ -131,7 +131,7 @@ const HomePage = () => {
         <div style={{ width: '20cm', backgroundColor: '#e9ecef', padding: '10px' }}>
           <ul className="list-group">
             <SignedIn>
-              <li className="list-group-item"><Link to="/HostedExam">My exams</Link></li>
+              <li className="list-group-item"><Link to="/HostedExam">Exams hosted by me</Link></li>
               <li className="list-group-item"><Link to="/RateExam">Rate exam</Link></li>
             </SignedIn>
             <SignedOut>

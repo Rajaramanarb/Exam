@@ -7,6 +7,7 @@ import ExamPage from './pages/ExamPage';
 import HostedExam from './pages/HostedExam';
 import Statistics from './pages/Statistics';
 import EditDetails from './pages/EditDetails';
+import ViewDetails from './pages/ViewDetails';
 import TopExams from './pages/TopExams';
 import RateExam from './pages/RateExam';
 import License from './admin/License';
@@ -39,6 +40,7 @@ const App = () => {
           <Route path="/Admin" element={<Admin />} />
           <Route path="/AdminPassword" element={<AdminPassword />} />          
           <Route path="/AdTime" element={<AdTime />} />
+          <Route path="/ViewDetails/:examId" element={<ViewDetails />} />
         </Route>
       </Routes>
       <hr />
