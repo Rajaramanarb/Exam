@@ -16,6 +16,9 @@ import Advertisement from './admin/Advertisement';
 import Admin from './admin/Admin';
 import AdminPassword from './admin/AdminPassword';
 import AdTime from './admin/AdTime';
+import ApproveExam from './admin/ApproveExam';
+import ListExam from './admin/ListExam';
+import Unauthorized from './admin/Unauthorized';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -41,6 +44,9 @@ const App = () => {
           <Route path="/AdminPassword" element={<AdminPassword />} />          
           <Route path="/AdTime" element={<AdTime />} />
           <Route path="/ViewDetails/:examId" element={<ViewDetails />} />
+          <Route path="/ApproveExam/:examId" element={<ApproveExam />} />     
+          <Route path="/ListExam" element={<ListExam />} />
+          <Route path="/Unauthorized" element={<Unauthorized />} />        
         </Route>
       </Routes>
       <hr />

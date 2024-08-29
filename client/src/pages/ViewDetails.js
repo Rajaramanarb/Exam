@@ -396,6 +396,12 @@ const ViewDetails = () => {
     setQuestionIndex(0);
   };
 
+  useEffect(() => {
+    if (examDetails.Author_Id && examDetails.Author_Id !== user.id) {
+      navigate('/Unauthorized', { state: { from: `/ViewDetails/${examDetails.Exam_Id}` } }); // Redirect to an unauthorized or error page
+    }
+  }, [examDetails, user, navigate]); 
+
   return (
     <div>
       <nav className="navbar navbar-expand-lg navbar-light bg-light">

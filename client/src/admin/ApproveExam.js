@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { Table, Button, Modal, Alert } from 'react-bootstrap';
 import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -9,7 +9,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useUser } from '@clerk/clerk-react';
 import '../css/ExamForm.css';
 
-const EditDetails = () => {
+const ApproveExam = () => {
   const { user } = useUser();
   const { examId } = useParams();
   const navigate = useNavigate();
@@ -28,17 +28,20 @@ const EditDetails = () => {
     JEE: ['Physics', 'Chemistry', 'Maths']
   };
 
-  const [examDetailsOriginal, setExamDetailsOriginal] = useState({});
-  const [questionDetailsOriginal, setQuestionDetailsOriginal] = useState({});
-
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const location = useLocation(); // Getting the current location
+
+  useEffect(() => {
+    if (location.state?.from !== '/ListExam') {
+      navigate('/Admin');
+    }
+  }, [location, navigate]);
 
   useEffect(() => {
     const fetchExamDetails = async () => {
       try {
         const response = await axios.get(`${apiUrl}/exams/${examId}`);
         setExamDetails(response.data);
-        setExamDetailsOriginal(response.data);
       } catch (error) {
         //toast.error('Error fetching exam details:');
         console.error('Error fetching exam details:', error);
@@ -49,7 +52,6 @@ const EditDetails = () => {
       try {
         const response = await axios.get(`${apiUrl}/questions/${examId}`);
         setQuestions(response.data);
-        setQuestionDetailsOriginal(response.data);
       } catch (error) {
         //toast.error('Error fetching questions');
         console.error('Error fetching questions:', error);
@@ -223,47 +225,6 @@ const EditDetails = () => {
     setShowModal(true);
   };
 
-  // const handleQuestionPrevious = () => {
-  //   if (questionIndex > 0) {
-  //     const prevIndex = questionIndex - 1;
-  //     setQuestionIndex(prevIndex);
-  //     setQuestionDetails(questions[prevIndex]);
-  //   }
-  // };
-
-  // const handleQuestionNext = () => {
-  //   if (questionIndex < questions.length - 1) {
-  //     const nextIndex = questionIndex + 1;
-  //     setQuestionIndex(nextIndex);
-  //     setQuestionDetails(questions[nextIndex]);
-  //   } else {
-  //     setShowModal(false);
-  //   }
-  // };
-
-  // const handleQuestionSave = () => {
-  //   const updatedQuestions = [...questions];
-  //   updatedQuestions[questionIndex] = questionDetails;
-  //   setQuestions(updatedQuestions);
-  //   setQuestionDetails({
-  //     Question: '',
-  //     Answer_1: '',
-  //     Answer_2: '',
-  //     Answer_3: '',
-  //     Answer_4: '',
-  //     Correct_Answer: '',
-  //     Difficulty_Level: '',
-  //     Question_Subject: '',
-  //     Image: null 
-  //   });
-  //   setSelectedQuestionId('');
-  //   setShowModal(false);
-    
-  //   setTimeout(() => {
-  //     alert("Please click on update button to save your details.");
-  //   }, 300);
-  // };
-
   const saveCurrentQuestion = () => {
     const updatedQuestions = [...questions];
     updatedQuestions[questionIndex] = questionDetails;
@@ -304,16 +265,6 @@ const EditDetails = () => {
       setShowModal(false);
     }
   };
-  
-  const handleQuestionSave = () => {
-    saveCurrentQuestion();
-    resetQuestionDetails();
-    setShowModal(false);
-  
-    setTimeout(() => {
-      alert("Please click on update button to save your details.");
-    }, 300);
-  };  
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -324,11 +275,8 @@ const EditDetails = () => {
       const examData = {
         ...examDetails,
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A'),
-        Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A'),
+        Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
-      if (examDetails !== examDetailsOriginal && questionDetails !== questionDetailsOriginal) {
-        examData.isApproved = null;
-      }
       await axios.put(`${apiUrl}/exams/${examId}`, examData);
   
       // Handle deleted questions
@@ -353,10 +301,7 @@ const EditDetails = () => {
             formData.append('Answer_2', updatedQuestion.Answer_2);
             formData.append('Answer_3', updatedQuestion.Answer_3);
             formData.append('Answer_4', updatedQuestion.Answer_4);
-            //formData.append('Correct_Answer', updatedQuestion.Correct_Answer);
-            updatedQuestion.Correct_Answer === undefined
-            ? formData.append('Correct_Answer', null)
-            : formData.append('Correct_Answer', updatedQuestion.Correct_Answer);          
+            formData.append('Correct_Answer', updatedQuestion.Correct_Answer);
             formData.append('Difficulty_Level', updatedQuestion.Difficulty_Level);
             formData.append('Exam_ID', examId);
             formData.append('Author_Id', user.id);
@@ -378,10 +323,7 @@ const EditDetails = () => {
             formData.append('Answer_2', questions[i].Answer_2);
             formData.append('Answer_3', questions[i].Answer_3);
             formData.append('Answer_4', questions[i].Answer_4);
-            //formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));
-            questions[i].Correct_Answer === undefined
-            ? formData.append('Correct_Answer', null)
-            : formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));    
+            formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));
             formData.append('Difficulty_Level', questions[i].Difficulty_Level);
             if (questions[i].Question_Subject) {
               formData.append('Question_Subject', questions[i].Question_Subject);
@@ -405,11 +347,8 @@ const EditDetails = () => {
           formData.append('Answer_2', questions[i].Answer_2);
           formData.append('Answer_3', questions[i].Answer_3);
           formData.append('Answer_4', questions[i].Answer_4);
-          //formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));
-          questions[i].Correct_Answer === undefined
-            ? formData.append('Correct_Answer', null)
-            : formData.append('Correct_Answer', questions[i].Correct_Answer);    
-          formData.append('Difficulty_Level', parseInt(questions[i].Correct_Answer));
+          formData.append('Correct_Answer', parseInt(questions[i].Correct_Answer));
+          formData.append('Difficulty_Level', questions[i].Difficulty_Level);
           if (questions[i].Question_Subject) {
             formData.append('Question_Subject', questions[i].Question_Subject);
           }
@@ -464,11 +403,20 @@ const EditDetails = () => {
     setQuestionIndex(0);
   };
 
-  useEffect(() => {
-    if (examDetails.Author_Id && examDetails.Author_Id !== user.id) {
-      navigate('/Unauthorized', { state: { from: `/EditDetails/${examDetails.Exam_Id}` } }); // Redirect to an unauthorized or error page
+  const handleApproval = async (approvalStatus) => {
+    setIsSubmitting(true);
+
+    try {
+      await axios.put(`${apiUrl}/exams/${examId}/approval`, { isApproved: approvalStatus });
+      setExamDetails(prevDetails => ({ ...prevDetails, isApproved: approvalStatus }));
+      toast.success(`Exam ${approvalStatus ? 'approved' : 'disapproved'} successfully`);
+    } catch (error) {
+      console.error(`Error ${approvalStatus ? 'approving' : 'disapproving'} exam:`, error);
+      toast.error(`Failed to ${approvalStatus ? 'approve' : 'disapprove'} the exam`);
+    } finally {
+      setIsSubmitting(false);
     }
-  }, [examDetails, user, navigate]);  
+  };
 
   return (
     <div>
@@ -496,7 +444,7 @@ const EditDetails = () => {
           </div>
         </nav>
       <div className="container">
-        <h2>Edit Exam Details</h2>
+        <h2>Exam Details</h2>
         <form onSubmit={handleExamSubmit} className="p-4 border rounded shadow-sm">
           <div className="row">
             <div className="col-md-6">
@@ -509,32 +457,20 @@ const EditDetails = () => {
                   name="Exam_Desc"
                   placeholder="Enter the exam description"
                   value={examDetails.Exam_Desc}
-                  onChange={handleExamChange}
-                  required
+                  readOnly
                   style={{ width: '290px' }} 
                 />
               </div>            
               <div className="form-check mb-0">
                 <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
-                <select
+                <input
+                  type="text"
                   className="form-control"
                   name="Exam_Category"
                   value={examDetails.Exam_Category}
-                  onChange={handleExamChange}
-                  required
+                  readOnly
                   style={{ width: '290px' }} 
-                >
-                  <option value="">Select Category</option>
-                  <option value="LowerGrade">Lower Grade</option>
-                  <option value="College">College</option>
-                  <option value="NEET">NEET</option>
-                  <option value="NEET_Chapterwise">NEET Chapterwise</option>
-                  <option value="NEET_Subjectwise">NEET Subjectwise</option>
-                  <option value="JEE">JEE</option>                
-                  <option value="JEE_Chapterwise">JEE Chapterwise</option>
-                  <option value="JEE_Subjectwise">JEE Subjectwise</option>
-                  <option value="Others">Others</option>
-                </select>
+                />
               </div>
             </div>
             <div className="mb-3 d-flex align-items-center">
@@ -543,21 +479,14 @@ const EditDetails = () => {
                   <label className="form-label fw-bold">
                     Subject<span style={{ color: 'red' }}>*</span>
                   </label>
-                  <select
-                    className="form-control"
-                    name="Subject"
-                    value={examDetails.Subject}
-                    onChange={handleExamChange}
-                    required
-                    style={{ width: '130px' }} 
-                  >
-                    <option value="">Select Subject</option>
-                    {getSubjects().map((subject) => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                  type="text"
+                  className="form-control"
+                  name="Subject"
+                  value={examDetails.Subject}
+                  readOnly
+                  style={{ width: '130px' }} 
+                />
                 </div>
               ) : examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
                 <div></div>
@@ -570,8 +499,7 @@ const EditDetails = () => {
                     name="Subject"
                     placeholder="Enter the subject"
                     value={examDetails.Subject}
-                    onChange={handleExamChange}
-                    required
+                    readOnly
                     style={{ width: '290px' }} 
                   />
                 </div>
@@ -581,21 +509,14 @@ const EditDetails = () => {
                   <label className="form-label fw-bold">
                     Chapter<span style={{ color: 'red' }}>*</span>
                   </label>
-                  <select
-                    className="form-control"
-                    name="Chapter"
-                    value={examDetails.Chapter}
-                    onChange={handleExamChange}
-                    required
-                    style={{ width: '450px' }} 
-                  >
-                    <option value="">Select Chapter</option>
-                    {chapters.map((chapter, index) => (
-                      <option key={index} value={chapter}>
-                        {chapter}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                  type="text"
+                  className="form-control"
+                  name="Chapter"
+                  value={examDetails.Chapter}
+                  readOnly
+                  style={{ width: '450px' }} 
+                />
                 </div>
               )}    
             </div>                     
@@ -607,21 +528,10 @@ const EditDetails = () => {
                   id="flexCheckbox"
                   name="Negative_Marking"
                   checked={examDetails.Negative_Marking}
-                  onChange={handleExamChange}
+                  readOnly
                 />
             </div>
-            </div>
-            {/* <div className="mb-3">
-              <label className="form-label fw-bold">Question Duration (minutes)<span style={{ color: 'red' }}>*</span></label>
-              <input
-                type="number"
-                className="form-control"
-                name="Question_Duration"                
-                value={examDetails.Question_Duration}
-                readOnly
-                required
-              />
-            </div>   */}         
+            </div>    
           <div className="col-md-6">
             <div className="mb-3 d-flex align-items-center">
               <div className="mb-0">
@@ -632,26 +542,20 @@ const EditDetails = () => {
                     name="Exam_Duration"
                     placeholder="Enter the exam duration in minutes"
                     value={examDetails.Exam_Duration}
-                    onChange={handleExamChange}
-                    required
+                    readOnly
                     style={{ width: '290px' }} 
                   />               
               </div>
               <div className="form-check mb-0">
-                <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
-                <select
+                <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>                
+                <input
+                  type="text"
                   className="form-control"
                   name="Difficulty_Level"
                   value={examDetails.Difficulty_Level}
-                  onChange={handleExamChange}
-                  required
+                  readOnly
                   style={{ width: '290px' }} 
-                >
-                  <option value="">Select Difficulty Level</option>
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
-                </select>
+                />
               </div>       
             </div>
             <div className="mb-3 d-flex align-items-center">     
@@ -665,11 +569,9 @@ const EditDetails = () => {
                   name="No_of_Questions"
                   placeholder="Enter the number of questions"
                   value={examDetails.No_of_Questions}
-                  onChange={handleExamChange}
-                  required
+                  readOnly
                   style={{ width: '290px' }}
                 />
-                {noOfQuestionsError && <Alert variant="danger">{noOfQuestionsError}</Alert>}
               </div>
               <div className="form-check mb-0">
                 <label className="form-label fw-bold">
@@ -681,11 +583,9 @@ const EditDetails = () => {
                   name="Questions_To_Attend"
                   placeholder="Enter no of questions to attend"
                   value={examDetails.Questions_To_Attend}
-                  onChange={handleExamChange}
-                  required
+                  readOnly
                   style={{ width: '290px' }}
                 />
-                {questionsToAttendError && <Alert variant="danger">{questionsToAttendError}</Alert>}
               </div>
             </div>
             <div className="mb-3 d-flex align-items-center">
@@ -696,11 +596,7 @@ const EditDetails = () => {
                     className="form-control"
                     name="Publish_Date"
                     value={moment(examDetails.Publish_Date).format('YYYY-MM-DDTHH:mm')}
-                    onChange={(e) => {
-                    handleExamChange(e);
-                    e.target.blur(); // Force the calendar to close after selection
-                    }}
-                    required
+                    readOnly
                     style={{ width: '290px' }}
                   />
               </div>  
@@ -710,26 +606,42 @@ const EditDetails = () => {
                   type="datetime-local"
                   className="form-control"
                   name="Exam_Valid_Upto"
-                  value={moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DDTHH:mm')}
-                  onChange={(e) => {
-                    handleExamChange(e);
-                    e.target.blur(); // Force the calendar to close after selection
-                  }}
-                  required
+                  value={moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DDTHH:mm')}                  
+                  readOnly
                   style={{ width: '290px' }}
                 />
               </div>
             </div>                      
           </div>
         </div>
-          <div className="text-center">
-          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Updating...' : 'Update'}
+        <div className="text-center">
+          <button
+            type="button"
+            className="btn btn-primary me-2"
+            disabled={isSubmitting}
+            onClick={() => handleApproval(true)}
+          >
+            {isSubmitting ? 'Approve..' : 'Approve'}
           </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={isSubmitting}
+            onClick={() => handleApproval(false)}
+          >
+            {isSubmitting ? 'Disapprove...' : 'Disapprove'}
+          </button>
+        </div>
+        <div className="text-center">
+          {examDetails.isApproved === true ? (
+            <p><b>Approved</b></p>
+          ) : examDetails.isApproved === false ? (
+            <p><b>Disapproved</b></p>
+          ) : null}
+        </div>
         </form>
 
-        <h2 className="mt-4">Edit Questions</h2>
+        <h2 className="mt-4">Questions</h2>
         <Table className="table table-hover">
           <thead className="thead-dark">
             <tr>
@@ -752,8 +664,7 @@ const EditDetails = () => {
                 <td>{question.Answer_4}</td>
                 <td>{question.Correct_Answer}</td>
                 <td>
-                  <Button variant="warning" className="me-2" onClick={() => handleQuestionEdit(index)}>✏️ Edit</Button>
-                  <Button variant="danger" onClick={() => handleQuestionDelete(index)}>🗑️ Delete</Button>
+                  <Button variant="primary" className="me-2" onClick={() => handleQuestionEdit(index)}>View</Button>
                 </td>
               </tr>
             ))}
@@ -762,44 +673,20 @@ const EditDetails = () => {
 
         <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
           <Modal.Header closeButton>
-            <Modal.Title>Edit Question</Modal.Title>
+            <Modal.Title>Question</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <form>
-            <div className="mb-3">
-                <label className="form-label fw-bold">Your Question</label>
-                <select
-                  className="form-control"
-                  id="authoredQuestions"
-                  name="authoredQuestions"
-                  value={selectedQuestionId}
-                  onChange={handleAuthoredQuestionSelect}
-                >
-                  <option value="">Select a question</option>
-                  {authoredQuestions.map((q) => (
-                    <option key={q.Question_ID} value={q.Question_ID}>
-                      {q.Question}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
+             {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
                 <div className="mb-3">
                   <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
-                  <select
-                    className="form-control"
-                    name="Question_Subject"
-                    value={questionDetails.Question_Subject}
-                    onChange={handleQuestionChange}
-                    //required
-                  >
-                    <option value="">Select Subject</option>
-                    {questionSubjectOptions[examDetails.Exam_Category].map((subject) => (
-                      <option key={subject} value={subject}>
-                        {subject}
-                      </option>
-                    ))}
-                  </select>
+                  <input
+                  type="text"
+                  className="form-control"
+                  name="Question_Subject"
+                  value={questionDetails.Question_Subject}
+                  readOnly
+                />
                 </div>
               ) : null}
               <div className="mb-3">
@@ -810,9 +697,8 @@ const EditDetails = () => {
                   name="Question"
                   placeholder="Enter the question"
                   value={questionDetails.Question}
-                  onChange={handleQuestionChange}
                   rows="3"
-                  //required
+                  readOnly
                 />
               </div>
               <div className="mb-3">
@@ -823,8 +709,7 @@ const EditDetails = () => {
                   name="Answer_1"
                   placeholder="Enter answer 1"
                   value={questionDetails.Answer_1}
-                  onChange={handleQuestionChange}
-                  //required
+                  readOnly
                 />
               </div>
               <div className="mb-3">
@@ -835,8 +720,7 @@ const EditDetails = () => {
                   name="Answer_2"
                   placeholder="Enter answer 2" 
                   value={questionDetails.Answer_2}
-                  onChange={handleQuestionChange}
-                  //required
+                  readOnly
                 />
               </div>
               <div className="mb-3">
@@ -847,8 +731,7 @@ const EditDetails = () => {
                   name="Answer_3"
                   placeholder="Enter answer 3" 
                   value={questionDetails.Answer_3}
-                  onChange={handleQuestionChange}
-                  //required
+                  readOnly
                 />
               </div>
               <div className="mb-3">
@@ -859,55 +742,32 @@ const EditDetails = () => {
                   name="Answer_4"
                   placeholder="Enter answer 4" 
                   value={questionDetails.Answer_4}
-                  onChange={handleQuestionChange}
-                  //required
+                  readOnly
                 />
               </div>
               <div className="mb-3">
                 <label className="form-label fw-bold">Correct Answer <span style={{ color: 'red' }}>*</span></label>
-                <select
+                <input
+                  type="text"
                   className="form-control"
                   name="Correct_Answer"
                   value={questionDetails.Correct_Answer}
-                  onChange={(e) => setQuestionDetails({
-                    ...questionDetails,
-                    Correct_Answer: parseInt(e.target.value) // Convert to number
-                  })}
-                  //required
-                >
-                  <option value="">Select Correct Answer</option>
-                  <option value="1">Answer 1</option>
-                  <option value="2">Answer 2</option>
-                  <option value="3">Answer 3</option>
-                  <option value="4">Answer 4</option>
-                </select>
+                  readOnly
+                />
               </div>
               <div className="mb-3">
                 <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
-                <select
+                <input
+                  type="text"
                   className="form-control"
                   name="Difficulty_Level"
                   value={questionDetails.Difficulty_Level}
-                  onChange={handleQuestionChange}
-                  //required
-                >
-                  <option value="">Select Difficulty Level</option>
-                  <option value="Easy">Easy</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Hard">Hard</option>
-                </select>
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Add image</label>
-                <input
-                  className="form-control"
-                  type="file"
-                  name="Image"                
-                  onChange={handleQuestionChange}
+                  readOnly
                 />
               </div>
               {questionDetails.Image && (
                 <div className="question-image mb-3">
+                <label className="form-label fw-bold">Image</label>
                   <img 
                     src={questionDetails.ImagePreview || `${apiUrl}/${questionDetails.Image}`} 
                     alt="Question" 
@@ -928,10 +788,7 @@ const EditDetails = () => {
               <Button variant="primary" onClick={handleQuestionNext}>
               Next
             </Button>
-            )}
-            <Button variant="success" onClick={handleQuestionSave}>
-              Save
-            </Button>
+            )}            
           </Modal.Footer>
         </Modal>
       </div>
@@ -939,4 +796,4 @@ const EditDetails = () => {
   );
 };
 
-export default EditDetails;
+export default ApproveExam;

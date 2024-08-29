@@ -152,6 +152,7 @@ const HostedExam = () => {
             <th>Published On</th>
             <th>Valid Upto</th>
             <th>Filled</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -191,6 +192,25 @@ const HostedExam = () => {
                     }`}
                   >
                     {exam.isReady ? 'Ready' : 'Pending'}
+                  </span>
+                </td>
+                <td>
+                  <span
+                    className={`text fw-bold ${
+                      exam.isApproved === null
+                        ? 'text-warning' // Yellow color for 'In Progress'
+                        : exam.isApproved
+                        ? 'text-success' // Green color for 'Approved'
+                        : 'text-danger'  // Red color for 'Disapproved'
+                    }`}
+                  >
+                    {exam.isApproved === null 
+                      ? 'In Progress' 
+                      : exam.isApproved === true
+                      ? 'Approved' 
+                      : exam.isApproved === false
+                      ? 'Disapproved'
+                      : null}
                   </span>
                 </td>
                 <td>

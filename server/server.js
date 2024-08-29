@@ -127,7 +127,8 @@ const ExamMasterSchema = new mongoose.Schema({
   Exam_Valid_Upto: { type: String, required: true },
   Negative_Marking: { type: Boolean, required: true },
   isDeleted: { type: Boolean, required: true },
-  time: Number
+  time: Number,
+  isApproved: Boolean
 });
 
 ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });
@@ -183,7 +184,10 @@ const advertisementSchema = new mongoose.Schema({
   adPath: {
     type: String,
     required: true
-  }
+  },
+  type: String,
+  publishDate: String,
+  expiryDate: String
 });
 
 const Advertisement = mongoose.model('Advertisement', advertisementSchema);
@@ -229,6 +233,24 @@ const subjectSchema = new mongoose.Schema({
 });
 
 const Subject = mongoose.model('Subject', subjectSchema);
+
+const unauthorizedUserSchema = new mongoose.Schema({
+  clerkId: {
+    type: String,
+  },
+  firstName: {
+    type: String,
+  },
+  path: {
+    type: String,
+  },
+  heldOn: {
+    type: String,
+    default: () => moment().tz('Asia/Kolkata').format('YYYY-MM-DD hh:mm A')
+  }
+});
+
+const unauthorizedUser = mongoose.model('unauthorizedUser', unauthorizedUserSchema);
 
 router.get('/license', async (req, res) => {
   try {
@@ -283,7 +305,7 @@ router.post('/exams', async (req, res) => {
   }
 });
 
-app.get('/exams', async (req, res) => {
+router.get('/exams', async (req, res) => {
   try {
     const exams = await Exam_Master.find();
     res.status(200).json(exams);
@@ -435,6 +457,28 @@ router.put('/exams/:examId', async (req, res) => {
   } catch (error) {
     console.error('Error updating exam:', error);
     res.status(500).send({ message: 'Failed to update exam' });
+  }
+});
+
+router.put('/exams/:examId/approval', async (req, res) => {
+  try {
+    const { examId } = req.params;
+    const { isApproved } = req.body;
+    
+    const updatedExam = await Exam_Master.findOneAndUpdate(
+      { Exam_Id: examId },
+      { isApproved: isApproved },
+      { new: true }
+    );
+
+    if (!updatedExam) {
+      return res.status(404).send({ message: 'Exam not found' });
+    }
+
+    res.status(200).send({ message: `Exam ${isApproved ? 'approved' : 'disapproved'} successfully`, exam: updatedExam });
+  } catch (error) {
+    console.error(`Error updating exam approval status:`, error);
+    res.status(500).send({ message: `Failed to update exam approval status` });
   }
 });
 
@@ -627,7 +671,8 @@ router.post('/mainContent', async (req, res) => {
 
 router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
   try {
-    const { title, time } = req.body;
+    const { title, time, type, publishDate, expiryDate } = req.body;
+
     if (!req.file) {
       return res.status(400).json({ error: 'Advertisement file is required' });
     }
@@ -637,7 +682,10 @@ router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
     const newAdvertisement = new Advertisement({
       title,
       time,
-      adPath
+      adPath,
+      type,
+      publishDate,
+      expiryDate
     });
 
     await newAdvertisement.save();
@@ -648,7 +696,7 @@ router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
   }
 });
 
-let lastAdIndex = -1; // This will store the last served ad index
+/* let lastAdIndex = -1; // This will store the last served ad index
 
 router.get('/advertisements/next', async (req, res) => {
   try {
@@ -664,6 +712,55 @@ router.get('/advertisements/next', async (req, res) => {
 
     // Fetch the advertisement at the next index
     const nextAd = await Advertisement.findOne().skip(lastAdIndex).exec();
+
+    if (!nextAd) {
+      return res.status(404).json({ error: 'No advertisement found' });
+    }
+
+    res.status(200).json(nextAd);
+  } catch (error) {
+    console.error('Error fetching advertisement:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+}); */
+
+let lastAdIndex = -1;
+
+router.get('/advertisements/next', async (req, res) => {
+  try {
+    // Get the current time in Asia/Kolkata timezone
+    const currentTime = moment().tz('Asia/Kolkata');
+
+    // First, check for a valid Monthly advertisement
+    const monthlyAd = await Advertisement.findOne({
+      type: 'Monthly',
+      publishDate: { $lte: currentTime.format('YYYY-MM-DD hh:mm A') },
+      expiryDate: { $gte: currentTime.format('YYYY-MM-DD hh:mm A') }
+    }).exec();
+
+    if (monthlyAd) {
+      return res.status(200).json(monthlyAd);
+    }
+
+    // If no valid Monthly ad, proceed with the Sequential logic
+    // Get the total number of valid Sequential advertisements
+    const sequentialAds = await Advertisement.find({
+      type: 'Sequential',
+      publishDate: { $lte: currentTime.format('YYYY-MM-DD hh:mm A') },
+      expiryDate: { $gte: currentTime.format('YYYY-MM-DD hh:mm A') }
+    }).exec();
+
+    const totalAds = sequentialAds.length;
+
+    if (totalAds === 0) {
+      return res.status(404).json({ error: 'No advertisements found' });
+    }
+
+    // Calculate the next ad index
+    lastAdIndex = (lastAdIndex + 1) % totalAds;
+
+    // Fetch the advertisement at the next index
+    const nextAd = sequentialAds[lastAdIndex];
 
     if (!nextAd) {
       return res.status(404).json({ error: 'No advertisement found' });
@@ -792,6 +889,27 @@ app.get('/subjects', async (req, res) => {
   } catch (error) {
     console.error('Error retrieving subjects:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+router.post('/unauthorized', async (req, res) => {
+  try {
+    const { clerkId, firstName, path } = req.body;
+
+    // Create a new unauthorized access log
+    const newUnauthorizedLog = new unauthorizedUser({
+      clerkId,
+      firstName,
+      path
+    });
+
+    // Save the log to the database
+    await newUnauthorizedLog.save();
+
+    res.status(201).json({ message: 'Unauthorized access logged successfully' });
+  } catch (error) {
+    console.error('Error logging unauthorized access:', error);
+    res.status(500).json({ message: 'Failed to log unauthorized access' });
   }
 });
 

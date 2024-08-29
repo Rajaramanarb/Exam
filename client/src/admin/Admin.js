@@ -107,6 +107,8 @@ const Admin = () => {
             </Button>
             <Button as={Link} to="/AdTime" variant="success" className="mx-2" size="lg" state={{ from: '/Admin' }}>
               Set Ad Time
+            </Button><Button as={Link} to="/ListExam" variant="secondary" className="mx-2" size="lg" state={{ from: '/Admin' }}>
+              Approve Exam
             </Button>
           </div>
         </div>

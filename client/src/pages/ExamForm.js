@@ -28,7 +28,8 @@ const ExamForm = () => {
     Publish_Date: '',
     Negative_Marking: false,
     isDeleted: false,
-    time: null
+    time: null,
+    isApproved: null
   });
 
   const [authoredQuestions, setAuthoredQuestions] = useState([]);
