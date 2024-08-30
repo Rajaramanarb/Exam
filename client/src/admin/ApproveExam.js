@@ -407,7 +407,12 @@ const ApproveExam = () => {
     setIsSubmitting(true);
 
     try {
-      await axios.put(`${apiUrl}/exams/${examId}/approval`, { isApproved: approvalStatus });
+      await axios.put(`${apiUrl}/exams/${examId}/approval`, { 
+        isApproved: approvalStatus, 
+        email: user?.primaryEmailAddress?.emailAddress, 
+        firstName: user?.firstName,
+        category: examDetails.Exam_Category  
+      });
       setExamDetails(prevDetails => ({ ...prevDetails, isApproved: approvalStatus }));
       toast.success(`Exam ${approvalStatus ? 'approved' : 'disapproved'} successfully`);
     } catch (error) {
@@ -450,6 +455,17 @@ const ApproveExam = () => {
             <div className="col-md-6">
             <div className="mb-3 d-flex align-items-center">
               <div className="me-0">
+                <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    name="Exam_Category"
+                    value={examDetails.Exam_Category}
+                    readOnly
+                    style={{ width: '290px' }} 
+                  />
+              </div>            
+              <div className="form-check mb-0">                
                 <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
@@ -457,17 +473,6 @@ const ApproveExam = () => {
                   name="Exam_Desc"
                   placeholder="Enter the exam description"
                   value={examDetails.Exam_Desc}
-                  readOnly
-                  style={{ width: '290px' }} 
-                />
-              </div>            
-              <div className="form-check mb-0">
-                <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Exam_Category"
-                  value={examDetails.Exam_Category}
                   readOnly
                   style={{ width: '290px' }} 
                 />

@@ -502,6 +502,28 @@ const EditDetails = () => {
             <div className="col-md-6">
             <div className="mb-3 d-flex align-items-center">
               <div className="me-0">
+                <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
+                  <select
+                    className="form-control"
+                    name="Exam_Category"
+                    value={examDetails.Exam_Category}
+                    onChange={handleExamChange}
+                    required
+                    style={{ width: '290px' }} 
+                  >
+                    <option value="">Select Category</option>
+                    <option value="LowerGrade">Lower Grade</option>
+                    <option value="College">College</option>
+                    <option value="NEET">NEET</option>
+                    <option value="NEET_Chapterwise">NEET Chapterwise</option>
+                    <option value="NEET_Subjectwise">NEET Subjectwise</option>
+                    <option value="JEE">JEE</option>                
+                    <option value="JEE_Chapterwise">JEE Chapterwise</option>
+                    <option value="JEE_Subjectwise">JEE Subjectwise</option>
+                    <option value="Others">Others</option>
+                  </select>
+              </div>            
+              <div className="form-check mb-0">               
                 <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
                 <input
                   type="text"
@@ -513,28 +535,6 @@ const EditDetails = () => {
                   required
                   style={{ width: '290px' }} 
                 />
-              </div>            
-              <div className="form-check mb-0">
-                <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
-                <select
-                  className="form-control"
-                  name="Exam_Category"
-                  value={examDetails.Exam_Category}
-                  onChange={handleExamChange}
-                  required
-                  style={{ width: '290px' }} 
-                >
-                  <option value="">Select Category</option>
-                  <option value="LowerGrade">Lower Grade</option>
-                  <option value="College">College</option>
-                  <option value="NEET">NEET</option>
-                  <option value="NEET_Chapterwise">NEET Chapterwise</option>
-                  <option value="NEET_Subjectwise">NEET Subjectwise</option>
-                  <option value="JEE">JEE</option>                
-                  <option value="JEE_Chapterwise">JEE Chapterwise</option>
-                  <option value="JEE_Subjectwise">JEE Subjectwise</option>
-                  <option value="Others">Others</option>
-                </select>
               </div>
             </div>
             <div className="mb-3 d-flex align-items-center">

@@ -387,21 +387,8 @@ const ExamForm = () => {
       <form onSubmit={handleExamSubmit} className="p-4 border rounded shadow-sm">
         <div className="row">
           <div className="col-md-6">
-            <div className="mb-3 d-flex align-items-center">
+            <div className="mb-3 d-flex align-items-center">                          
               <div className="me-0">
-                <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Exam_Desc"
-                  placeholder="Enter the exam description"
-                  value={examDetails.Exam_Desc}
-                  onChange={handleChange}
-                  required
-                  style={{ width: '290px' }} 
-                />
-              </div>            
-              <div className="form-check mb-0">
                 <label className="form-label fw-bold">Exam Category<span style={{ color: 'red' }}>*</span></label>
                 <select
                   className="form-control"
@@ -422,6 +409,19 @@ const ExamForm = () => {
                   <option value="JEE_Subjectwise">JEE Subjectwise</option>
                   <option value="Others">Others</option>
                 </select>
+              </div>
+              <div className="form-check mb-0">
+                <label className="form-label fw-bold">Exam Description<span style={{ color: 'red' }}>*</span></label>
+                <input
+                  type="text"
+                  className="form-control"
+                  name="Exam_Desc"
+                  placeholder="Enter the exam description"
+                  value={examDetails.Exam_Desc}
+                  onChange={handleChange}
+                  required
+                  style={{ width: '290px' }} 
+                />
               </div>
             </div>
             <div className="mb-3 d-flex align-items-center">

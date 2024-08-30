@@ -12,6 +12,7 @@ const path = require('path');
 const fs = require('fs');
 const { title } = require('process');
 const bcrypt = require('bcrypt');
+const nodemailer = require('nodemailer');
 
 const app = express();
 const router = express.Router();
@@ -460,21 +461,44 @@ router.put('/exams/:examId', async (req, res) => {
   }
 });
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail', 
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS, 
+  },
+});
+
 router.put('/exams/:examId/approval', async (req, res) => {
   try {
     const { examId } = req.params;
     const { isApproved } = req.body;
+    const { email, firstName, category } = req.body;
     
     const updatedExam = await Exam_Master.findOneAndUpdate(
       { Exam_Id: examId },
       { isApproved: isApproved },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedExam) {
       return res.status(404).send({ message: 'Exam not found' });
     }
 
+    // Send email notification to user
+      const mailOptions = {
+        from: `"Exam Management Team" ${process.env.EMAIL_USER}`,
+        to: email, // Sending email to user's primary email address
+        subject: `Your Exam is ${isApproved ? 'Approved' : 'Disapproved'}`,
+        html: `
+          <p>Dear ${firstName},</p>
+          <p>Your Exam ID ${examId} for ${category} has been <strong>${isApproved ? 'Approved' : 'Disapproved'}</strong>.</p>
+          <p>Best wishes,<br>Exam Management Team</p>
+        `,
+      };
+
+      await transporter.sendMail(mailOptions);
+    
     res.status(200).send({ message: `Exam ${isApproved ? 'approved' : 'disapproved'} successfully`, exam: updatedExam });
   } catch (error) {
     console.error(`Error updating exam approval status:`, error);
