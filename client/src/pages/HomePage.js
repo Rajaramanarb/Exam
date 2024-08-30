@@ -23,7 +23,7 @@ const HomePage = () => {
         const response = await fetch(`${apiUrl}/license`);
         if (response.ok) {
           const data = await response.json();
-          if (data.version > licenseVersion) {
+          if (data.version !== licenseVersion) {
             localStorage.setItem('license', data.text);
             localStorage.setItem('licenseVersion', data.version);
             setLicenseText(data.text);
@@ -46,7 +46,7 @@ const HomePage = () => {
         const response = await axios.get(`${apiUrl}/mainContent`);
         if (response.status === 200) {
           const data = response.data;
-          if (data.version > version) {
+          if (data.version !== version) {
             localStorage.setItem('mainContentTitle', data.title);
             localStorage.setItem('mainContentText', data.text);
             localStorage.setItem('mainContentVersion', data.version);
