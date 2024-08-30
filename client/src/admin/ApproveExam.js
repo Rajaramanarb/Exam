@@ -634,14 +634,26 @@ const ApproveExam = () => {
         </div>
         <div>
           <div className="text-center">
-            <Button
-              type="button"
-              className="btn btn-primary me-2"
-              disabled={isSubmitting}
-              onClick={() => handleApproval(true)}
-            >
-              {isSubmitting ? 'Approve...' : 'Approve'}
-            </Button>
+          {examDetails.isApproved === null || examDetails.isApproved === undefined ? (
+            <div>
+              <Button
+                type="button"
+                className="btn btn-primary me-2"
+                disabled={isSubmitting}
+                onClick={() => handleApproval(true)}
+              >
+                {isSubmitting ? 'Approve...' : 'Approve'}
+              </Button>
+              <Button
+                type="button"
+                className="btn btn-danger"
+                disabled={isSubmitting}
+                onClick={handleDisapprove}
+              >
+                {isSubmitting ? 'Disapprove...' : 'Disapprove'}
+              </Button>
+            </div>
+          ) : examDetails.isApproved === true ? (
             <Button
               type="button"
               className="btn btn-danger"
@@ -650,6 +662,16 @@ const ApproveExam = () => {
             >
               {isSubmitting ? 'Disapprove...' : 'Disapprove'}
             </Button>
+          ) : examDetails.isApproved === false ? (
+            <Button
+              type="button"
+              className="btn btn-primary me-2"
+              disabled={isSubmitting}
+              onClick={() => handleApproval(true)}
+            >
+              {isSubmitting ? 'Approve...' : 'Approve'}
+            </Button>
+          ) : null}
           </div>
 
           {/* Modal for Disapproval Reason */}
@@ -688,9 +710,9 @@ const ApproveExam = () => {
         </div>
         <div className="text-center">
           {examDetails.isApproved === true ? (
-            <p><b>Approved</b></p>
+            <p>Current status: <b>Approved</b></p>
           ) : examDetails.isApproved === false ? (
-            <p><b>Disapproved</b></p>
+            <p>Current status: <b>Disapproved</b></p>
           ) : null}
         </div>
         </form>
