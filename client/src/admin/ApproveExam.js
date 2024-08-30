@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
-import { Table, Button, Modal, Alert } from 'react-bootstrap';
+import { Table, Button, Modal, Alert, Form } from 'react-bootstrap';
 import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { toast } from 'react-toastify';
@@ -403,6 +403,9 @@ const ApproveExam = () => {
     setQuestionIndex(0);
   };
 
+  const [disapprovalReason, setDisapprovalReason] = useState('');
+  const [showModal1, setShowModal1] = useState(false);
+
   const handleApproval = async (approvalStatus) => {
     setIsSubmitting(true);
 
@@ -411,7 +414,8 @@ const ApproveExam = () => {
         isApproved: approvalStatus, 
         email: user?.primaryEmailAddress?.emailAddress, 
         firstName: user?.firstName,
-        category: examDetails.Exam_Category  
+        category: examDetails.Exam_Category,
+        reason: approvalStatus ? '' : disapprovalReason, // Send reason if disapproved
       });
       setExamDetails(prevDetails => ({ ...prevDetails, isApproved: approvalStatus }));
       toast.success(`Exam ${approvalStatus ? 'approved' : 'disapproved'} successfully`);
@@ -420,7 +424,16 @@ const ApproveExam = () => {
       toast.error(`Failed to ${approvalStatus ? 'approve' : 'disapprove'} the exam`);
     } finally {
       setIsSubmitting(false);
+      setShowModal1(false); // Close modal after submission
     }
+  };
+
+  const handleDisapprove = () => {
+    setShowModal1(true); // Show the modal
+  };
+
+  const handleDisapproveConfirm = () => {
+    handleApproval(false); // Pass `false` to disapprove
   };
 
   return (
@@ -619,23 +632,59 @@ const ApproveExam = () => {
             </div>                      
           </div>
         </div>
-        <div className="text-center">
-          <button
-            type="button"
-            className="btn btn-primary me-2"
-            disabled={isSubmitting}
-            onClick={() => handleApproval(true)}
-          >
-            {isSubmitting ? 'Approve..' : 'Approve'}
-          </button>
-          <button
-            type="button"
-            className="btn btn-danger"
-            disabled={isSubmitting}
-            onClick={() => handleApproval(false)}
-          >
-            {isSubmitting ? 'Disapprove...' : 'Disapprove'}
-          </button>
+        <div>
+          <div className="text-center">
+            <Button
+              type="button"
+              className="btn btn-primary me-2"
+              disabled={isSubmitting}
+              onClick={() => handleApproval(true)}
+            >
+              {isSubmitting ? 'Approve...' : 'Approve'}
+            </Button>
+            <Button
+              type="button"
+              className="btn btn-danger"
+              disabled={isSubmitting}
+              onClick={handleDisapprove}
+            >
+              {isSubmitting ? 'Disapprove...' : 'Disapprove'}
+            </Button>
+          </div>
+
+          {/* Modal for Disapproval Reason */}
+          <Modal show={showModal1} onHide={() => setShowModal1(false)}>
+            <Modal.Header closeButton>
+              <Modal.Title>Reason for Disapproval</Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+              <Form.Group>
+              <Form.Control 
+                as="textarea" 
+                rows={3} 
+                value={disapprovalReason} 
+                onChange={(e) => setDisapprovalReason(e.target.value)} 
+                onBlur={() => {
+                  const trimmedValue = disapprovalReason
+                    .split('\n')
+                    .map(line => line.trim())
+                    .filter(line => line !== '')
+                    .join('\n');
+                  setDisapprovalReason(trimmedValue);
+                }}
+              />
+              </Form.Group>
+            </Modal.Body>
+            <Modal.Footer>
+              <Button 
+                variant="danger" 
+                onClick={handleDisapproveConfirm} 
+                disabled={!disapprovalReason} // Disable if no reason provided
+              >
+                {isSubmitting ? 'Disapprove...' : 'Disapprove'}
+              </Button>
+            </Modal.Footer>
+          </Modal>
         </div>
         <div className="text-center">
           {examDetails.isApproved === true ? (

@@ -473,7 +473,7 @@ router.put('/exams/:examId/approval', async (req, res) => {
   try {
     const { examId } = req.params;
     const { isApproved } = req.body;
-    const { email, firstName, category } = req.body;
+    const { email, firstName, category, reason } = req.body;
     
     const updatedExam = await Exam_Master.findOneAndUpdate(
       { Exam_Id: examId },
@@ -493,6 +493,7 @@ router.put('/exams/:examId/approval', async (req, res) => {
         html: `
           <p>Dear ${firstName},</p>
           <p>Your Exam ID ${examId} for ${category} has been <strong>${isApproved ? 'Approved' : 'Disapproved'}</strong>.</p>
+          <p>${reason}</p>
           <p>Best wishes,<br>Exam Management Team</p>
         `,
       };
