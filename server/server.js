@@ -678,7 +678,7 @@ router.post('/mainContent', async (req, res) => {
     let mainContent = await MainContent.findOne();
 
     if (mainContent) {
-      mainContent.title = text;
+      mainContent.title = title;
       mainContent.text = text;
       mainContent.version += 1;
       await mainContent.save();
