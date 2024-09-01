@@ -31,7 +31,7 @@ const TakeExam = () => {
             const publishDate = moment(exam.Publish_Date, "YYYY-MM-DD hh:mm A");
             const isReady = await checkExamReadiness(exam.Exam_Id, exam.No_of_Questions);
           
-            return !exam.isDeleted && now.isBefore(validUpto) && now.isAfter(publishDate) && isReady ? exam : null;
+            return !exam.isDeleted && now.isBefore(validUpto) && now.isAfter(publishDate) && exam.isApproved && isReady ? exam : null;
           }));
     
           const filteredValidExams = validExams.filter(exam => exam !== null);
