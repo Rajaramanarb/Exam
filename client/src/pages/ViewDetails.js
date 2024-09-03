@@ -23,10 +23,14 @@ const ViewDetails = () => {
   const [selectedQuestionId, setSelectedQuestionId] = useState('');
   const [deletedQuestions, setDeletedQuestions] = useState([]);
   const [setQuestionSubject] = useState('');
+  const [originalNumber, setOriginalNumber] = useState(null);
   const questionSubjectOptions = {
     NEET: ['Physics', 'Chemistry', 'Botany', 'Zoology'],
     JEE: ['Physics', 'Chemistry', 'Maths']
   };
+
+  const [examDetailsOriginal, setExamDetailsOriginal] = useState({});
+  const [questionDetailsOriginal, setQuestionDetailsOriginal] = useState({});
 
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
 
@@ -35,6 +39,8 @@ const ViewDetails = () => {
       try {
         const response = await axios.get(`${apiUrl}/exams/${examId}`);
         setExamDetails(response.data);
+        setOriginalNumber(response.data.No_of_Questions);
+        setExamDetailsOriginal(response.data);
       } catch (error) {
         //toast.error('Error fetching exam details:');
         console.error('Error fetching exam details:', error);
@@ -45,6 +51,7 @@ const ViewDetails = () => {
       try {
         const response = await axios.get(`${apiUrl}/questions/${examId}`);
         setQuestions(response.data);
+        setQuestionDetailsOriginal(response.data);
       } catch (error) {
         //toast.error('Error fetching questions');
         console.error('Error fetching questions:', error);
@@ -75,7 +82,7 @@ const ViewDetails = () => {
     if (examDetails.No_of_Questions) {
       setExamDetails((prevDetails) => ({
         ...prevDetails,
-        Questions_To_Attend: prevDetails.No_of_Questions
+        //Questions_To_Attend: prevDetails.No_of_Questions
       }));
     }
   }, [examDetails.No_of_Questions]);
@@ -138,8 +145,8 @@ const ViewDetails = () => {
 
     if (name === 'No_of_Questions') {
       const numValue = Number(value);
-      if (numValue < 1) {
-        setNoOfQuestionsError('Number of questions cannot be less than 1.');
+      if (numValue < originalNumber) {
+        setNoOfQuestionsError(`value cannot be less than exisiting no of questions (${originalNumber}).`);
       } else {
         setNoOfQuestionsError(''); // Clear error if validation passes
       }
@@ -259,6 +266,16 @@ const ViewDetails = () => {
     }
   };
 
+  const handleQuestionSave = () => {
+    saveCurrentQuestion();
+    resetQuestionDetails();
+    setShowModal(false);
+  
+    setTimeout(() => {
+      alert("Please click on update button to save your details.");
+    }, 300);
+  }; 
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleExamSubmit = async (e) => {
@@ -270,6 +287,9 @@ const ViewDetails = () => {
         Exam_Valid_Upto: moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DD hh:mm A'),
         Publish_Date: moment(examDetails.Publish_Date).format('YYYY-MM-DD hh:mm A')
       };
+      if (examDetails !== examDetailsOriginal && questionDetails !== questionDetailsOriginal) {
+        examData.isApproved = null;
+      }
       await axios.put(`${apiUrl}/exams/${examId}`, examData);
   
       // Handle deleted questions
@@ -397,10 +417,20 @@ const ViewDetails = () => {
   };
 
   useEffect(() => {
-    if (examDetails.Author_Id && examDetails.Author_Id !== user.id) {
+    if ((examDetails.Author_Id && examDetails.Author_Id !== user.id) && (user?.id && user?.id !== process.env.REACT_APP_ADMIN_ID)) {
       navigate('/Unauthorized', { state: { from: `/ViewDetails/${examDetails.Exam_Id}` } }); // Redirect to an unauthorized or error page
     }
   }, [examDetails, user, navigate]); 
+
+  const getString = (value) => (typeof value === 'string' ? value : '');
+  const isQuestionIncomplete = !getString(questionDetails?.Question).trim() ||
+  !getString(questionDetails?.Answer_1).trim() ||
+  !getString(questionDetails?.Answer_2).trim() ||
+  !getString(questionDetails?.Answer_3).trim() ||
+  !getString(questionDetails?.Answer_4).trim() ||
+  !getString(questionDetails?.Correct_Answer).trim() ||
+  !getString(questionDetails?.Difficulty_Level).trim() ||
+  !getString(questionDetails?.ImagePreview).trim();
 
   return (
     <div>
@@ -532,14 +562,19 @@ const ViewDetails = () => {
               </div>
               <div className="form-check mb-0">
                 <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>                
-                <input
-                  type="text"
+                <select
                   className="form-control"
                   name="Difficulty_Level"
                   value={examDetails.Difficulty_Level}
-                  readOnly
+                  onChange={handleExamChange}
+                  required
                   style={{ width: '290px' }} 
-                />
+                >
+                  <option value="">Select Difficulty Level</option>
+                  <option value="Easy">Easy</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Hard">Hard</option>
+                </select>
               </div>       
             </div>
             <div className="mb-3 d-flex align-items-center">     
@@ -553,9 +588,11 @@ const ViewDetails = () => {
                   name="No_of_Questions"
                   placeholder="Enter the number of questions"
                   value={examDetails.No_of_Questions}
-                  readOnly
+                  onChange={handleExamChange}
+                  required
                   style={{ width: '290px' }}
                 />
+                {noOfQuestionsError && <Alert variant="danger">{noOfQuestionsError}</Alert>}
               </div>
               <div className="form-check mb-0">
                 <label className="form-label fw-bold">
@@ -585,22 +622,48 @@ const ViewDetails = () => {
                   />
               </div>  
               <div className="form-check mb-0">
-                <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="datetime-local"
-                  className="form-control"
-                  name="Exam_Valid_Upto"
-                  value={moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DDTHH:mm')}                  
-                  readOnly
-                  style={{ width: '290px' }}
-                />
+                {moment().isAfter(moment(examDetails.Exam_Valid_Upto)) ? (
+                <div>
+                  <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    name="Exam_Valid_Upto"
+                    value={moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DDTHH:mm')}
+                    onChange={(e) => {
+                      handleExamChange(e);
+                      e.target.blur(); // Force the calendar to close after selection
+                    }}
+                    required
+                    style={{ width: '290px' }}
+                  />
+                </div>
+                ) : (
+                <div>
+                  <label className="form-label fw-bold">Exam Valid Up To<span style={{ color: 'red' }}>*</span></label>
+                  <input
+                    type="datetime-local"
+                    className="form-control"
+                    name="Exam_Valid_Upto"
+                    value={moment(examDetails.Exam_Valid_Upto).format('YYYY-MM-DDTHH:mm')}                  
+                    readOnly
+                    style={{ width: '290px' }}
+                  /> 
+                </div>
+                )
+                }
               </div>
             </div>                      
           </div>
         </div>
+        <div className="text-center">
+          <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+            {isSubmitting ? 'Updating...' : 'Update'}
+          </button>
+          </div>
         </form>
 
-        <h2 className="mt-4">Questions</h2>
+        <h2 className="mt-4">Edit Questions</h2>
         <Table className="table table-hover">
           <thead className="thead-dark">
             <tr>
@@ -623,7 +686,14 @@ const ViewDetails = () => {
                 <td>{question.Answer_4}</td>
                 <td>{question.Correct_Answer}</td>
                 <td>
+                {question?.Question?.trim() === "" && question?.Answer_1?.trim() === "" && question?.Answer_2?.trim() === "" && question?.Answer_3?.trim() === "" && question?.Answer_4?.trim() === "" && question?.Correct_Answer?.trim() === "" ? (
+                  <div>
+                    <Button variant="warning" className="me-2 mb-2" onClick={() => handleQuestionEdit(index)}>✏️ Edit</Button>
+                    <Button variant="danger" className="me-2 mb-2" onClick={() => handleQuestionDelete(index)}>🗑️ Delete</Button>
+                  </div>
+                ) : (
                   <Button variant="primary" className="me-2" onClick={() => handleQuestionEdit(index)}>View</Button>
+                )}
                 </td>
               </tr>
             ))}
@@ -632,112 +702,269 @@ const ViewDetails = () => {
 
         <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
           <Modal.Header closeButton>
-            <Modal.Title>Question</Modal.Title>
+            <Modal.Title>{isQuestionIncomplete ? 'Edit Question' : 'Question'}</Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <form>
-             {examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE' ? (
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
-                  <input
-                  type="text"
-                  className="form-control"
-                  name="Question_Subject"
-                  value={questionDetails.Question_Subject}
-                  readOnly
-                />
-                </div>
-              ) : null}
-              <div className="mb-3">
-                <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
-                <textarea
-                  type="text"
-                  className="form-control"
-                  name="Question"
-                  placeholder="Enter the question"
-                  value={questionDetails.Question}
-                  rows="3"
-                  readOnly
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Answer 1<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Answer_1"
-                  placeholder="Enter answer 1"
-                  value={questionDetails.Answer_1}
-                  readOnly
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Answer 2<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Answer_2"
-                  placeholder="Enter answer 2" 
-                  value={questionDetails.Answer_2}
-                  readOnly
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Answer 3<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Answer_3"
-                  placeholder="Enter answer 3" 
-                  value={questionDetails.Answer_3}
-                  readOnly
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Answer 4<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Answer_4"
-                  placeholder="Enter answer 4" 
-                  value={questionDetails.Answer_4}
-                  readOnly
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Correct Answer <span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Correct_Answer"
-                  value={questionDetails.Correct_Answer}
-                  readOnly
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="Difficulty_Level"
-                  value={questionDetails.Difficulty_Level}
-                  readOnly
-                />
-              </div>
-              {questionDetails.Image && (
-                <div className="question-image mb-3">
-                <label className="form-label fw-bold">Image</label>
-                  <img 
-                    src={questionDetails.ImagePreview || `${apiUrl}/${questionDetails.Image}`} 
-                    alt="Question" 
-                    className="img-fluid" 
-                    style={{ maxWidth: '300px', maxHeight: '300px' }}
-                  />
-                </div>
+              {isQuestionIncomplete ? (
+                <>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Your Question</label>
+                    <select
+                      className="form-control"
+                      id="authoredQuestions"
+                      name="authoredQuestions"
+                      value={selectedQuestionId}
+                      onChange={handleAuthoredQuestionSelect}
+                    >
+                      <option value="">Select a question</option>
+                      {authoredQuestions.map((q) => (
+                        <option key={q.Question_ID} value={q.Question_ID}>
+                          {q.Question}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {(examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE') ? (
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
+                      <select
+                        className="form-control"
+                        name="Question_Subject"
+                        value={questionDetails.Question_Subject}
+                        onChange={handleQuestionChange}
+                        required
+                      >
+                        <option value="">Select Subject</option>
+                        {questionSubjectOptions[examDetails.Exam_Category].map((subject) => (
+                          <option key={subject} value={subject}>
+                            {subject}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : null}
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
+                    <textarea
+                      type="text"
+                      className="form-control"
+                      name="Question"
+                      placeholder="Enter the question"
+                      value={questionDetails.Question}
+                      onChange={handleQuestionChange}
+                      rows="3"
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 1<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_1"
+                      placeholder="Enter answer 1"
+                      value={questionDetails.Answer_1}
+                      onChange={handleQuestionChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 2<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_2"
+                      placeholder="Enter answer 2"
+                      value={questionDetails.Answer_2}
+                      onChange={handleQuestionChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 3<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_3"
+                      placeholder="Enter answer 3"
+                      value={questionDetails.Answer_3}
+                      onChange={handleQuestionChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 4<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_4"
+                      placeholder="Enter answer 4"
+                      value={questionDetails.Answer_4}
+                      onChange={handleQuestionChange}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Correct Answer <span style={{ color: 'red' }}>*</span></label>
+                    <select
+                      className="form-control"
+                      name="Correct_Answer"
+                      value={questionDetails.Correct_Answer}
+                      onChange={(e) => setQuestionDetails({
+                        ...questionDetails,
+                        Correct_Answer: parseInt(e.target.value) // Convert to number
+                      })}
+                      required
+                    >
+                      <option value="">Select Correct Answer</option>
+                      <option value="1">Answer 1</option>
+                      <option value="2">Answer 2</option>
+                      <option value="3">Answer 3</option>
+                      <option value="4">Answer 4</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+                    <select
+                      className="form-control"
+                      name="Difficulty_Level"
+                      value={questionDetails.Difficulty_Level}
+                      onChange={handleQuestionChange}
+                      required
+                    >
+                      <option value="">Select Difficulty Level</option>
+                      <option value="Easy">Easy</option>
+                      <option value="Medium">Medium</option>
+                      <option value="Hard">Hard</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Add image</label>
+                    <input
+                      className="form-control"
+                      type="file"
+                      name="Image"
+                      onChange={handleQuestionChange}
+                    />
+                  </div>
+                  {questionDetails.Image && (
+                    <div className="question-image mb-3">
+                      <img
+                        src={questionDetails.ImagePreview || `${apiUrl}/${questionDetails.Image}`}
+                        alt="Question"
+                        className="img-fluid"
+                        style={{ maxWidth: '300px', maxHeight: '300px' }}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {(examDetails.Exam_Category === 'NEET' || examDetails.Exam_Category === 'JEE') ? (
+                    <div className="mb-3">
+                      <label className="form-label fw-bold">Question Subject<span style={{ color: 'red' }}>*</span></label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        name="Question_Subject"
+                        value={questionDetails.Question_Subject}
+                        readOnly
+                      />
+                    </div>
+                  ) : null}
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Question<span style={{ color: 'red' }}>*</span></label>
+                    <textarea
+                      type="text"
+                      className="form-control"
+                      name="Question"
+                      placeholder="Enter the question"
+                      value={questionDetails.Question}
+                      rows="3"
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 1<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_1"
+                      placeholder="Enter answer 1"
+                      value={questionDetails.Answer_1}
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 2<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_2"
+                      placeholder="Enter answer 2"
+                      value={questionDetails.Answer_2}
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 3<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_3"
+                      placeholder="Enter answer 3"
+                      value={questionDetails.Answer_3}
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Answer 4<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Answer_4"
+                      placeholder="Enter answer 4"
+                      value={questionDetails.Answer_4}
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Correct Answer <span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Correct_Answer"
+                      value={questionDetails.Correct_Answer}
+                      readOnly
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label fw-bold">Difficulty Level<span style={{ color: 'red' }}>*</span></label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      name="Difficulty_Level"
+                      value={questionDetails.Difficulty_Level}
+                      readOnly
+                    />
+                  </div>
+                  {questionDetails.Image && (
+                  <div className="question-image mb-3">
+                  <label className="form-label fw-bold">Image</label>
+                    <img 
+                      src={questionDetails.ImagePreview || `${apiUrl}/${questionDetails.Image}`} 
+                      alt="Question" 
+                      className="img-fluid" 
+                      style={{ maxWidth: '300px', maxHeight: '300px' }}
+                    />
+                  </div>
+                  )}
+                </>
               )}
             </form>
           </Modal.Body>
-          <Modal.Footer>          
+          <Modal.Footer>
             {questionIndex > 0 && (
               <Button variant="secondary" onClick={handleQuestionPrevious}>
                 Previous
@@ -745,9 +972,14 @@ const ViewDetails = () => {
             )}
             {questionIndex < questions.length - 1 && (
               <Button variant="primary" onClick={handleQuestionNext}>
-              Next
-            </Button>
-            )}            
+                Next
+              </Button>
+            )}
+            {isQuestionIncomplete && (
+              <Button variant="success" onClick={handleQuestionSave}>
+                Save
+              </Button>
+            )}
           </Modal.Footer>
         </Modal>
       </div>

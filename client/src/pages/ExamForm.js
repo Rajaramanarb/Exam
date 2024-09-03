@@ -29,7 +29,8 @@ const ExamForm = () => {
     Negative_Marking: false,
     isDeleted: false,
     time: null,
-    isApproved: null
+    isApproved: null,
+    Email: ''
   });
 
   const [authoredQuestions, setAuthoredQuestions] = useState([]);
@@ -79,8 +80,9 @@ const ExamForm = () => {
     if (user) {
       setExamDetails((prevDetails) => ({
         ...prevDetails,
-        Author_Name: user.firstName,
-        Author_Id: user.id
+        Author_Name: user?.firstName,
+        Author_Id: user?.id,
+        Email: user?.primaryEmailAddress?.emailAddress
       }));
     }
   }, [user]);

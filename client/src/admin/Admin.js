@@ -3,8 +3,10 @@ import { Container, Button, Navbar, Nav, Modal, Form } from 'react-bootstrap';
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { useUser } from "@clerk/clerk-react";
 
 const Admin = () => {
+  const { user } = useUser();
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [show, setShow] = useState(true);
@@ -46,6 +48,7 @@ const Admin = () => {
 
   return (
     <div>
+      {user?.id && user?.id !== process.env.REACT_APP_ADMIN_ID ? (
       <Modal show={show} onHide={handleClose} backdrop="static" size="sm">
         <Modal.Header>
           <Modal.Title>Verification</Modal.Title>
@@ -71,6 +74,7 @@ const Admin = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+      ) : null} 
 
       <Navbar bg="light" expand="lg" className="shadow-sm">
         <Container>
@@ -109,6 +113,9 @@ const Admin = () => {
               Set Ad Time
             </Button><Button as={Link} to="/ListExam" variant="secondary" className="mx-2" size="lg" state={{ from: '/Admin' }}>
               Approve Exam
+            </Button>
+            <Button as={Link} to="/HostedExam" variant="dark" className="mx-2" size="lg" state={{ from: '/Admin' }}>
+              Hosted Exam
             </Button>
           </div>
         </div>

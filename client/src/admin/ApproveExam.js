@@ -412,8 +412,8 @@ const ApproveExam = () => {
     try {
       await axios.put(`${apiUrl}/exams/${examId}/approval`, { 
         isApproved: approvalStatus, 
-        email: user?.primaryEmailAddress?.emailAddress, 
-        firstName: user?.firstName,
+        email: examDetails.Email, 
+        firstName: examDetails.Author_Name,
         category: examDetails.Exam_Category,
         reason: approvalStatus ? '' : disapprovalReason, // Send reason if disapproved
       });

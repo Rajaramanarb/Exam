@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useUser } from '@clerk/clerk-react';
 import { Table, Button } from 'react-bootstrap';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { toast } from 'react-toastify';
@@ -14,11 +14,17 @@ const HostedExam = () => {
   const [editableExams, setEditableExams] = useState({});
   const navigate = useNavigate();
   const apiUrl = process.env.REACT_APP_API_URL_DEVELOPMENT;
+  const location = useLocation(); // Getting the current location
 
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/hosted-exams/${user.id}`);
+        let response;
+        if (location.state?.from === '/Admin') {
+          response = await axios.get(`${apiUrl}/exams`);
+        } else {
+          response = await axios.get(`${apiUrl}/hosted-exams/${user.id}`);
+        }
         const examsData = response.data;
     
         // Check readiness for each exam
@@ -214,17 +220,22 @@ const HostedExam = () => {
                   </span>
                 </td>
                 <td>
-                  {editableExams[exam.Exam_Id] === true ? (
-                    <Button variant="warning" className="me-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
+                  {location.state?.from === '/Admin' ? (
+                    <div>
+                    <Button variant="warning" className="me-2 mb-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
+                    <Button variant="primary" className="me-2 mb-2" onClick={() => handleView(exam.Exam_Id)}>🖥️ View</Button>
+                    </div>
+                  ) :                   
+                  editableExams[exam.Exam_Id] === true ? (
+                    <Button variant="warning" className="me-2 mb-2" onClick={() => handleEdit(exam.Exam_Id)}>✏️ Edit</Button>
                   ) : (
-                    <Button variant="primary" className="me-2" onClick={() => handleView(exam.Exam_Id)}>🖥️ View</Button>
-                  )
-                  }
+                    <Button variant="primary" className="me-2 mb-2" onClick={() => handleView(exam.Exam_Id)}>🖥️ View</Button>
+                  )}
 
                   {exam.isDeleted === false ? (
-                    <Button variant="danger" onClick={() => handleDelete(index)}>🗑️ Delete</Button>
+                    <Button variant="danger" className="me-2 mb-2" onClick={() => handleDelete(index)}>🗑️ Delete</Button>
                   ) : (
-                    <Button variant="primary" onClick={() => handleReactivate(index)}>🚀 Re-activate</Button>
+                    <Button variant="primary" className="me-2 mb-2" onClick={() => handleReactivate(index)}>🚀 Re-activate</Button>
                   )}
                 </td>
               </tr>

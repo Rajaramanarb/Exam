@@ -129,7 +129,8 @@ const ExamMasterSchema = new mongoose.Schema({
   Negative_Marking: { type: Boolean, required: true },
   isDeleted: { type: Boolean, required: true },
   time: Number,
-  isApproved: Boolean
+  isApproved: Boolean,
+  Email: String
 });
 
 ExamMasterSchema.plugin(AutoIncrement, { inc_field: 'Exam_Id', start_seq: 1 });

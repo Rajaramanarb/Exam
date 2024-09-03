@@ -465,7 +465,7 @@ const EditDetails = () => {
   };
 
   useEffect(() => {
-    if (examDetails.Author_Id && examDetails.Author_Id !== user.id) {
+    if ((examDetails.Author_Id && examDetails.Author_Id !== user.id) && (user?.id && user?.id !== process.env.REACT_APP_ADMIN_ID)) {
       navigate('/Unauthorized', { state: { from: `/EditDetails/${examDetails.Exam_Id}` } }); // Redirect to an unauthorized or error page
     }
   }, [examDetails, user, navigate]);  
@@ -752,8 +752,8 @@ const EditDetails = () => {
                 <td>{question.Answer_4}</td>
                 <td>{question.Correct_Answer}</td>
                 <td>
-                  <Button variant="warning" className="me-2" onClick={() => handleQuestionEdit(index)}>✏️ Edit</Button>
-                  <Button variant="danger" onClick={() => handleQuestionDelete(index)}>🗑️ Delete</Button>
+                  <Button variant="warning" className="me-2 mb-2" onClick={() => handleQuestionEdit(index)}>✏️ Edit</Button>
+                  <Button variant="danger" className="me-2 mb-2" onClick={() => handleQuestionDelete(index)}>🗑️ Delete</Button>
                 </td>
               </tr>
             ))}
