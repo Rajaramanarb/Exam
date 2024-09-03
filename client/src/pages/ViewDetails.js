@@ -38,9 +38,11 @@ const ViewDetails = () => {
     const fetchExamDetails = async () => {
       try {
         const response = await axios.get(`${apiUrl}/exams/${examId}`);
-        setExamDetails(response.data);
-        setOriginalNumber(response.data.No_of_Questions);
-        setExamDetailsOriginal(response.data);
+        if (JSON.stringify(response.data) !== JSON.stringify(examDetailsOriginal)) {
+          setExamDetails(response.data);
+          setOriginalNumber(response.data.No_of_Questions);
+          setExamDetailsOriginal(response.data);
+        }
       } catch (error) {
         //toast.error('Error fetching exam details:');
         console.error('Error fetching exam details:', error);
@@ -50,8 +52,10 @@ const ViewDetails = () => {
     const fetchQuestions = async () => {
       try {
         const response = await axios.get(`${apiUrl}/questions/${examId}`);
-        setQuestions(response.data);
-        setQuestionDetailsOriginal(response.data);
+        if (JSON.stringify(response.data) !== JSON.stringify(questionDetailsOriginal)) {
+          setQuestions(response.data);
+          setQuestionDetailsOriginal(response.data);
+        }
       } catch (error) {
         //toast.error('Error fetching questions');
         console.error('Error fetching questions:', error);
@@ -76,7 +80,7 @@ const ViewDetails = () => {
       fetchQuestions();
       fetchAuthoredQuestions();
     }
-  }, [examId, user]);
+  }, [examId, user, examDetailsOriginal, questionDetailsOriginal]);
 
   useEffect(() => {
     if (examDetails.No_of_Questions) {
@@ -422,15 +426,18 @@ const ViewDetails = () => {
     }
   }, [examDetails, user, navigate]); 
 
-  const getString = (value) => (typeof value === 'string' ? value : '');
-  const isQuestionIncomplete = !getString(questionDetails?.Question).trim() ||
-  !getString(questionDetails?.Answer_1).trim() ||
-  !getString(questionDetails?.Answer_2).trim() ||
-  !getString(questionDetails?.Answer_3).trim() ||
-  !getString(questionDetails?.Answer_4).trim() ||
-  !getString(questionDetails?.Correct_Answer).trim() ||
-  !getString(questionDetails?.Difficulty_Level).trim() ||
-  !getString(questionDetails?.ImagePreview).trim();
+  const getString = (value) => (typeof value === 'string' && value.trim() !== '') ? value.trim() : null;
+
+  const isQuestionIncomplete = 
+    !getString(questionDetails?.Question) ||
+    !getString(questionDetails?.Answer_1) ||
+    !getString(questionDetails?.Answer_2) ||
+    !getString(questionDetails?.Answer_3) ||
+    !getString(questionDetails?.Answer_4) ||
+    !getString(questionDetails?.Correct_Answer) ||
+    !getString(questionDetails?.Difficulty_Level) ||
+    !getString(questionDetails?.ImagePreview);
+
 
   return (
     <div>
