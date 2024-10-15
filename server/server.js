@@ -16,7 +16,7 @@ const nodemailer = require('nodemailer');
 
 const app = express();
 const router = express.Router();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 // const uploadDir = path.join(__dirname, 'uploads');
 // if (!fs.existsSync(uploadDir)) {
