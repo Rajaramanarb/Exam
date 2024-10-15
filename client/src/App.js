@@ -49,7 +49,6 @@ const App = () => {
           <Route path="/Unauthorized" element={<Unauthorized />} />        
         </Route>
       </Routes>
-      <hr />
       <ToastContainer />
     </div>
   );
