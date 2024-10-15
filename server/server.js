@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const express = require('express');
-const serverless = require('serverless-http');
+//const serverless = require('serverless-http');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -953,4 +953,4 @@ mongoose.connection.on('error', (error) => {
   console.error('MongoDB connection error:', error);
 });
 
-module.exports.handler = serverless(app);
+//module.exports.handler = serverless(app);
