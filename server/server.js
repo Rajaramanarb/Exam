@@ -18,42 +18,42 @@ const app = express();
 const router = express.Router();
 const PORT = process.env.PORT;
 
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+// const uploadDir = path.join(__dirname, 'uploads');
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir);
+// }
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+// const storage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'uploads/');
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   }
+// });
 
-const upload = multer({ storage: storage });
+// const upload = multer({ storage: storage });
 
 app.use(cors());
 app.use(bodyParser.json());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-const adDir = path.join(__dirname, 'advertisements');
-if (!fs.existsSync(adDir)) {
-  fs.mkdirSync(adDir);
-}
+// const adDir = path.join(__dirname, 'advertisements');
+// if (!fs.existsSync(adDir)) {
+//   fs.mkdirSync(adDir);
+// }
 
-const adStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'advertisements/');
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  }
-});
+// const adStorage = multer.diskStorage({
+//   destination: (req, file, cb) => {
+//     cb(null, 'advertisements/');
+//   },
+//   filename: (req, file, cb) => {
+//     cb(null, Date.now() + path.extname(file.originalname));
+//   }
+// });
 
-const adUpload = multer({ storage: adStorage });
-app.use('/advertisements', express.static(path.join(__dirname, 'advertisements')));
+// const adUpload = multer({ storage: adStorage });
+// app.use('/advertisements', express.static(path.join(__dirname, 'advertisements')));
 
 
 mongoose.connect(process.env.MONGODB_URI, {
@@ -317,12 +317,12 @@ router.get('/exams', async (req, res) => {
   }
 });
 
-router.post('/questions', upload.single('Image'), async (req, res) => {
+router.post('/questions', async (req, res) => {
   try {
     const questionData = req.body;
-    if (req.file) {
-      questionData.Image = req.file.path;
-    }
+    // if (req.file) {
+    //   questionData.Image = req.file.path;
+    // }
 
     const newQuestion = new Question_Master(questionData);
     await newQuestion.save();
@@ -385,7 +385,7 @@ router.get('/author-questions/:authorId', async (req, res) => {
   }
 });
 
-router.put('/questions/:questionId', upload.single('Image'), async (req, res) => {
+router.put('/questions/:questionId', async (req, res) => {
   try {
     const { questionId } = req.params;
     const questionData = req.body;
@@ -396,17 +396,17 @@ router.put('/questions/:questionId', upload.single('Image'), async (req, res) =>
       return res.status(404).send({ message: 'Question not found' });
     }
 
-    if (req.file) {
-      if (existingQuestion.Image) {
-        const existingImagePath = path.resolve(existingQuestion.Image);
-        fs.unlink(existingImagePath, (err) => {
-          if (err) {
-            console.error('Error deleting existing image:', err);
-          }
-        });
-      }
-      questionData.Image = req.file.path;
-    }
+    // if (req.file) {
+    //   if (existingQuestion.Image) {
+    //     const existingImagePath = path.resolve(existingQuestion.Image);
+    //     fs.unlink(existingImagePath, (err) => {
+    //       if (err) {
+    //         console.error('Error deleting existing image:', err);
+    //       }
+    //     });
+    //   }
+    //   questionData.Image = req.file.path;
+    // }
 
     const updatedQuestion = await Question_Master.findOneAndUpdate({ Question_ID: questionId }, questionData, { new: true });
 
@@ -426,14 +426,14 @@ router.delete('/questions/:questionId', async (req, res) => {
       return res.status(404).json({ message: 'Question not found' });
     }
 
-    if (question.Image) {
-      const imagePath = path.resolve(question.Image);
-      fs.unlink(imagePath, (err) => {
-        if (err) {
-          console.error('Error deleting image file:', err);
-        }
-      });
-    }
+    // if (question.Image) {
+    //   const imagePath = path.resolve(question.Image);
+    //   fs.unlink(imagePath, (err) => {
+    //     if (err) {
+    //       console.error('Error deleting image file:', err);
+    //     }
+    //   });
+    // }
 
     await Question_Master.deleteOne({ Question_ID: questionId });
 
@@ -695,7 +695,7 @@ router.post('/mainContent', async (req, res) => {
   }
 });
 
-router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
+router.post('/advertisements', async (req, res) => {
   try {
     const { title, time, type, publishDate, expiryDate } = req.body;
 
@@ -703,7 +703,7 @@ router.post('/advertisements', adUpload.single('adFile'), async (req, res) => {
       return res.status(400).json({ error: 'Advertisement file is required' });
     }
 
-    const adPath = req.file.path;
+    //const adPath = req.file.path;
 
     const newAdvertisement = new Advertisement({
       title,
